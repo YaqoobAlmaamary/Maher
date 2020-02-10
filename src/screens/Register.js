@@ -19,10 +19,11 @@ import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-
 import CountryPicker from "../components/CountryPicker"
 import PasswordInput from "../components/PasswordInput"
 import DateButton from "../components/DateButton"
+import SkillsInput from '../components/SkillsInput'
 
 export default class Register extends Component {
   state = {
-    step: 1,
+    step: 7,
     firstname: '',
     lastname: '',
     username: '',
@@ -31,7 +32,7 @@ export default class Register extends Component {
     country: '',
     email: '',
     password: '',
-    skills: {},
+    skills: [],
   }
   handleNext = () => {
     this.setState(() => ({
@@ -68,9 +69,13 @@ export default class Register extends Component {
   setDate = (date) => {
     date = date || this.state.date;
     this.setState({
-      show: Platform.OS === 'ios' ? true : false,
       date,
-    });
+    })
+  }
+  handleAddSkill = (skill) => {
+    this.setState({
+      skills: this.state.skills.concat(skill)
+    })
   }
 
   getFormattedDate = (date) => {
@@ -254,6 +259,31 @@ export default class Register extends Component {
               <PasswordInput
               autoFocus={true}
               handlePasswordChange={this.handlePasswordChange} />
+              <View style={styles.textButtonContainer}>
+                <TextButton onPress={this.handleBack}>
+                  <Ionicons name='ios-arrow-back' size={21} /> Back
+                </TextButton>
+                <TextButton onPress={this.handleNext}>
+                  Next <Ionicons name='ios-arrow-forward' size={21} />
+                </TextButton>
+              </View>
+            </Form>
+          </KeyboardAvoidingView>
+
+      )
+    }
+
+    // Skills
+    if (step == 7) {
+
+      return (
+
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+            <Form style={styles.inner}>
+              <Text style={{fontSize: 21,  marginLeft:20}}>Add skills</Text>
+              <SkillsInput
+              handleAddSkill={this.handleAddSkill} />
+              <Text>{JSON.stringify(this.state.skills)}</Text>
               <View style={styles.textButtonContainer}>
                 <TextButton onPress={this.handleBack}>
                   <Ionicons name='ios-arrow-back' size={21} /> Back
