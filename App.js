@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { AppLoading } from 'expo'
-import { View, StatusBar, StyleSheet} from 'react-native'
+import { View, StyleSheet, Button} from 'react-native'
 import {
   Header,
   Container,
@@ -8,21 +8,27 @@ import {
 } from 'native-base'
 import * as Font from 'expo-font'
 import { Ionicons } from '@expo/vector-icons'
-import Constants from 'expo-constants'
 import getTheme from './native-base-theme/components'
 import material from './native-base-theme/variables/material'
 import Login from './src/screens/Login.js'
 import Register from './src/screens/Register.js'
 import { I18nManager} from 'react-native'
+import { NavigationContainer, DarkTheme } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack'
+import TextButton from './src/components/TextButton'
 
-function MaherStatusBar ({backgroundColor, ...props}) {
-  return (
-    <View style={{ backgroundColor, height: Constants.statusBarHeight }}>
-      <StatusBar translucent backgroundColor={backgroundColor} {...props} />
-    </View>
-  )
-}
 
+const Stack = createStackNavigator();
+const MyTheme = {
+  ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      primary: '#BB86FC',
+      background: '#121212',
+      text: 'rgba(255, 255, 255, 0.87)',
+      card: '#2f2f2f',
+    },
+};
 
 //I18nManager.allowRTL(false)
 //I18nManager.forceRTL(false)
@@ -47,13 +53,25 @@ export default class App extends Component {
     }
 
     return (
-      <StyleProvider style={getTheme(material)}>
-        <Container>
-          <MaherStatusBar backgroundColor='#000000' barStyle="light-content" />
-          <Header />
-          <Register />
-        </Container>
-      </StyleProvider>
+        <StyleProvider style={getTheme(material)}>
+          <Container>
+            <NavigationContainer theme={MyTheme}>
+              <Stack.Navigator initialRouteName="Login">
+                <Stack.Screen name="Login" component={Login} options={{headerShown: false}} />
+                <Stack.Screen name="Register" component={Register}
+                options={{
+                title: 'Create new account',
+                headerTitleAlign: 'center',
+                headerRight: () => (
+                  <TextButton onPress={() => alert('This is a button!')} style={{fontSize: 16, margin: 15, letterSpacing: 0, textTransform: 'capitalize',}}>
+                    Cancel
+                  </TextButton>
+                ),
+              }}/>
+              </Stack.Navigator>
+            </NavigationContainer>
+          </Container>
+        </StyleProvider>
     )
   }
 }
