@@ -25,7 +25,7 @@ export default class SkillsInput extends Component {
         <FormItem style={styles.formItem}>
           <Input
           value={skill}
-          placeholder="enter at least 1 char to add"
+          placeholder="e.g: javascript, python, java.."
           style={styles.textInput}
           autoFocus={this.props.autoFocus == true ? true : false }
           onChangeText={(skill) => this.setState({skill})} />

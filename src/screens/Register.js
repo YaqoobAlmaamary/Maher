@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { View, StyleSheet, TextInput, ScrollView, KeyboardAvoidingView, Image} from 'react-native'
 import {
-  Header,
   Left,
   Right,
   Body,
@@ -20,10 +19,11 @@ import CountryPicker from "../components/CountryPicker"
 import PasswordInput from "../components/PasswordInput"
 import DateButton from "../components/DateButton"
 import SkillsInput from '../components/SkillsInput'
+import SkillTagWithRemove from '../components/SkillTagWithRemove'
 
 export default class Register extends Component {
   state = {
-    step: 7,
+    step: 1,
     firstname: '',
     lastname: '',
     username: '',
@@ -77,6 +77,11 @@ export default class Register extends Component {
       skills: this.state.skills.concat(skill)
     })
   }
+  removeSkill = (removedSkill) => {
+    this.setState({
+      skills: this.state.skills.filter((skill) => skill !== removedSkill)
+    })
+  }
 
   getFormattedDate = (date) => {
     return date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate()
@@ -98,6 +103,9 @@ export default class Register extends Component {
                   style={styles.textInput}
                   value={this.state.firstname}
                   autoFocus={true}
+                  returnKeyType = { "next" }
+                  blurOnSubmit={ false }
+                  onSubmitEditing={() => { this.lastNameInput._root.focus() }} //to move to lastname input using keyboard
                   onChangeText={(firstname) => this.setState({firstname}) }/>
                 </FormItem>
                 <FormItem floatingLabel style={[styles.formItem, { width: 157.5, marginLeft:7.5}]}>
@@ -105,6 +113,7 @@ export default class Register extends Component {
                   <Input placeholder="last name"
                   style={styles.textInput}
                   value={this.state.lastname}
+                  getRef={input => { this.lastNameInput = input }} // make ref to this input to be used on sumbiting firstname
                   onChangeText={(lastname) => this.setState({lastname}) } />
                 </FormItem>
               </View>
@@ -280,11 +289,24 @@ export default class Register extends Component {
 
           <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
             <Form style={styles.inner}>
-              <Text style={{fontSize: 21,  marginLeft:20}}>Add skills</Text>
+              <Text style={{fontSize: 21,  marginLeft:20, marginTop: 15}}>Add your skills</Text>
               <SkillsInput
-              handleAddSkill={this.handleAddSkill} />
-              <Text>{JSON.stringify(this.state.skills)}</Text>
-              <View style={styles.textButtonContainer}>
+              handleAddSkill={this.handleAddSkill}
+              autoFocus={true} />
+              <Text style={{fontSize: 14,  marginLeft: 20, marginRight: 20, color: 'rgba(255, 255, 255, 0.6)'}}>
+                languages, databases, libraries, tools, APIs, or design skills that you’re experienced with
+              </Text>
+              <View>
+                <ScrollView horizontal style={{height: 80}}>
+                  <View style={styles.skillTagsContainer}>
+                    {this.state.skills.length != 0 &&
+                      this.state.skills.map((skill) => (
+                        <SkillTagWithRemove removeSkill={this.removeSkill} skill={skill} />
+                      ))}
+                  </View>
+                </ScrollView>
+              </View>
+              <View style={[styles.textButtonContainer], {paddingBottom: 30}}>
                 <TextButton onPress={this.handleBack}>
                   <Ionicons name='ios-arrow-back' size={21} /> Back
                 </TextButton>
@@ -350,5 +372,10 @@ const styles = StyleSheet.create({
     flexDirection:'row',
     justifyContent: 'space-between',
     marginTop: 50
+  },
+  skillTagsContainer: {
+    flexDirection:'row',
+    flexWrap: 'wrap',
+    marginTop: 15,
   }
 })
