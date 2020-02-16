@@ -16,12 +16,14 @@ export default class PasswordInput extends Component {
 
   render () {
     const { showPassword } = this.state
+    const { value, error } = this.props
 
     return (
       <View style={styles.container}>
-        <FormItem floatingLabel style={styles.formItem}>
+        <FormItem floatingLabel style={[styles.formItem, (error != null && error !== '') && {borderColor: '#CF6679',}]}>
           <Label style={styles.label}>Password</Label>
           <Input
+          value={value}
           keyboardType={Platform.OS == 'android'&& showPassword ? "visible-password" : "default"}
           secureTextEntry={showPassword ? false : true}
           placeholder="Password"
