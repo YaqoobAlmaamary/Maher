@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { AppLoading } from 'expo'
+import Firebase, { FirebaseProvider } from './config/Firebase'
 import { View, StyleSheet, Button} from 'react-native'
 import {
   Header,
@@ -18,7 +19,8 @@ import { createStackNavigator } from '@react-navigation/stack'
 import TextButton from './src/components/TextButton'
 
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator()
+
 const MyTheme = {
   ...DarkTheme,
     colors: {
@@ -28,7 +30,7 @@ const MyTheme = {
       text: 'rgba(255, 255, 255, 0.87)',
       card: '#2f2f2f',
     },
-};
+}
 
 //I18nManager.allowRTL(false)
 //I18nManager.forceRTL(false)
@@ -53,25 +55,18 @@ export default class App extends Component {
     }
 
     return (
-        <StyleProvider style={getTheme(material)}>
-          <Container>
-            <NavigationContainer theme={MyTheme}>
-              <Stack.Navigator initialRouteName="Login">
-                <Stack.Screen name="Login" component={Login} options={{headerShown: false}} />
-                <Stack.Screen name="Register" component={Register}
-                options={{
-                title: 'Create new account',
-                headerTitleAlign: 'center',
-                headerRight: () => (
-                  <TextButton onPress={() => alert('This is a button!')} style={{fontSize: 16, margin: 15, letterSpacing: 0, textTransform: 'capitalize',}}>
-                    Cancel
-                  </TextButton>
-                ),
-              }}/>
-              </Stack.Navigator>
-            </NavigationContainer>
-          </Container>
-        </StyleProvider>
+        <FirebaseProvider value={Firebase}>
+          <StyleProvider style={getTheme(material)}>
+            <Container>
+              <NavigationContainer theme={MyTheme}>
+                <Stack.Navigator initialRouteName="Login">
+                  <Stack.Screen name="Login" component={Login} options={{headerShown: false}} />
+                  <Stack.Screen name="Register" component={Register} />
+                </Stack.Navigator>
+              </NavigationContainer>
+            </Container>
+          </StyleProvider>
+        </FirebaseProvider>
     )
   }
 }
