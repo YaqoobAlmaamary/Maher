@@ -175,10 +175,11 @@ class Register extends Component {
     })
   }
 
-  validateEmail = () => {
-   if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(this.state.email))
-    {
-      this.handleNext()
+  validateEmail = () => { // in step 4
+   if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(this.state.email)){
+      this.setState({
+        step: 5
+      })
       return (true)
     }
       this.setState(() => ({
@@ -187,7 +188,7 @@ class Register extends Component {
       return (false)
   }
 
-  validateUsername = (next) => {
+  validateUsername = (next) => { // in step 5
     const { firebase } = this.props
     const { username } = this.state
     if(username.length < 3){
@@ -199,7 +200,10 @@ class Register extends Component {
       firebase.getUsernameData(username)
         .then((doc) => {
           if(doc.empty){
-            this.handleNext()
+            // move to next step
+            this.setState({
+              step: 6
+            })
           }
           else {
             this.setState(() => ({
@@ -292,7 +296,7 @@ class Register extends Component {
                 </FormItem>
               </View>
               <View style={[styles.textButtonContainer,{justifyContent: 'flex-end'}]}>
-                <TextButton onPress={this.handleNext} disabled={(firstname == '' || lastname == '') ? true : false}>
+                <TextButton onPress={() => this.setState({step: 2})} disabled={(firstname == '' || lastname == '') ? true : false}>
                   Next <Ionicons name='ios-arrow-forward' size={21} />
                 </TextButton>
               </View>
@@ -301,38 +305,9 @@ class Register extends Component {
           </KeyboardAvoidingView>
       )
     }
-    // username
-    if (step == 2) {
-      const { username, usernameError } = this.state
 
-      return (
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-            <Form style={styles.inner}>
-            <Text style={{fontSize: 21,  marginLeft:20}}>Pick a user name</Text>
-              <FormItem floatingLabel style={[styles.formItem, usernameError !== '' && {borderColor: '#CF6679',}]}>
-                <Label style={styles.label}>User name</Label>
-                <Input placeholder="username"
-                style={styles.textInput}
-                value={this.state.username}
-                autoFocus={true}
-                onChangeText={(username) => this.handleUserNameChange(username)}/>
-              </FormItem>
-              {usernameError !== '' && <Text style={{marginLeft:20, color: '#CF6679'}}>{usernameError}</Text>}
-              <View style={styles.textButtonContainer}>
-                <TextButton onPress={this.handleBack}>
-                  <Ionicons name='ios-arrow-back' size={21} /> Back
-                </TextButton>
-                <TextButton onPress={this.validateUsername} disabled={username == '' || usernameError !== '' ? true : false}>
-                  Next <Ionicons name='ios-arrow-forward' size={21} />
-                </TextButton>
-              </View>
-            </Form>
-            <CancelAlert showAlert={this.state.showAlert} showAlertFunc={this.showAlert} hideAlert={this.hideAlert} navigation={navigation} />
-          </KeyboardAvoidingView>
-      )
-    }
     // birth date and gender
-    if (step == 3) {
+    if (step == 2) {
       const { date, gender } = this.state
       const radio_props = [
         {label: 'Male', value: 0 },
@@ -366,7 +341,7 @@ class Register extends Component {
                 <TextButton onPress={this.handleBack}>
                   <Ionicons name='ios-arrow-back' size={21} /> Back
                 </TextButton>
-                <TextButton onPress={this.handleNext} disabled={(date === '' || gender === '') ? true : false}>
+                <TextButton onPress={() => this.setState({step: 3})} disabled={(date === '' || gender === '') ? true : false}>
                   Next <Ionicons name='ios-arrow-forward' size={21} />
                 </TextButton>
               </View>
@@ -377,7 +352,7 @@ class Register extends Component {
     }
 
     // Country Picker
-    if (step == 4) {
+    if (step == 3) {
       const { country } = this.state
 
       return (
@@ -393,7 +368,7 @@ class Register extends Component {
                 <TextButton onPress={this.handleBack}>
                   <Ionicons name='ios-arrow-back' size={21} /> Back
                 </TextButton>
-                <TextButton onPress={this.handleNext} disabled={country === '' ? true : false}>
+                <TextButton onPress={() => this.setState({step: 4})} disabled={country === '' ? true : false}>
                   Next <Ionicons name='ios-arrow-forward' size={21} />
                 </TextButton>
               </View>
@@ -404,7 +379,7 @@ class Register extends Component {
     }
 
     // Email
-    if (step == 5) {
+    if (step == 4) {
       const { email, emailError } = this.state
 
       return (
@@ -434,6 +409,37 @@ class Register extends Component {
       )
     }
 
+    // username
+    if (step == 5) {
+      const { username, usernameError } = this.state
+
+      return (
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+            <Form style={styles.inner}>
+            <Text style={{fontSize: 21,  marginLeft:20}}>Pick a user name</Text>
+              <FormItem floatingLabel style={[styles.formItem, usernameError !== '' && {borderColor: '#CF6679',}]}>
+                <Label style={styles.label}>User name</Label>
+                <Input placeholder="username"
+                style={styles.textInput}
+                value={this.state.username}
+                autoFocus={true}
+                onChangeText={(username) => this.handleUserNameChange(username)}/>
+              </FormItem>
+              {usernameError !== '' && <Text style={{marginLeft:20, color: '#CF6679'}}>{usernameError}</Text>}
+              <View style={styles.textButtonContainer}>
+                <TextButton onPress={this.handleBack}>
+                  <Ionicons name='ios-arrow-back' size={21} /> Back
+                </TextButton>
+                <TextButton onPress={this.validateUsername} disabled={username == '' || usernameError !== '' ? true : false}>
+                  Next <Ionicons name='ios-arrow-forward' size={21} />
+                </TextButton>
+              </View>
+            </Form>
+            <CancelAlert showAlert={this.state.showAlert} showAlertFunc={this.showAlert} hideAlert={this.hideAlert} navigation={navigation} />
+          </KeyboardAvoidingView>
+      )
+    }
+
     // Password
     if (step == 6) {
       const { password, passwordError } = this.state
@@ -452,7 +458,7 @@ class Register extends Component {
                 <TextButton onPress={this.handleBack}>
                   <Ionicons name='ios-arrow-back' size={21} /> Back
                 </TextButton>
-                <TextButton onPress={this.handleNext} disabled={password === '' || passwordError !== '' ? true : false}>
+                <TextButton onPress={() => this.setState({step: 7})} disabled={password === '' || passwordError !== '' ? true : false}>
                   Next <Ionicons name='ios-arrow-forward' size={21} />
                 </TextButton>
               </View>
