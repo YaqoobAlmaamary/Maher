@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Maher",
-    "slug": "Maher",
+    "name": "MaherV0.01",
+    "slug": "maherv01",
     "privacy": "public",
     "sdkVersion": "36.0.0",
     "platforms": [
@@ -15,7 +15,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#2f2f2f"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -25,6 +25,15 @@
     ],
     "ios": {
       "supportsTablet": true
-    }
+    },
+    "androidNavigationBar": {
+
+      "visible": true,
+
+      "barStyle": "light-content",
+
+      "backgroundColor": "#121212"
+    },
+    "description": ""
   }
 }
