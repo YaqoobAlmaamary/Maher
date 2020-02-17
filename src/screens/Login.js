@@ -11,15 +11,26 @@ import {
 import PasswordInput from "../components/PasswordInput"
 import Register from './Register'
 import MaherStatusBar from '../components/MaherStatusBar'
+import { withFirebaseHOC } from '../../config/Firebase'
 
 
-export default class Login extends Component {
-  static navigationOptions = {
-        headerShown: false
-    }
+class Login extends Component {
   state = {
     email: '',
     password: '',
+  }
+
+  submit = () => {
+    const { firebase } = this.props
+    const { email, password } = this.state
+
+    firebase.loginWithEmail(email, password)
+      .then(() => {
+        this.props.route.params.login()
+      })
+      .catch((error) => {
+        console.log(error)
+      })
   }
   render() {
     const { email, password } = this.state
@@ -44,7 +55,7 @@ export default class Login extends Component {
                 onChangeText={(email) => this.setState({email})} />
               </FormItem>
               <PasswordInput handlePasswordChange={(password) => this.setState({password})} />
-              <Button full primary style={styles.loginBtn} disabled= {email=="" || password == "" ? true : false}>
+              <Button full primary style={styles.loginBtn} onPress={this.submit} disabled= {email=="" || password == "" ? true : false}>
                 <Text style={styles.loginBtnText}> Log in </Text>
               </Button>
             </Form>
@@ -119,3 +130,5 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   }
 })
+
+export default withFirebaseHOC(Login)
