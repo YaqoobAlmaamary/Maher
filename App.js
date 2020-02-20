@@ -17,6 +17,7 @@ import Home from './src/screens/Home.js'
 import Profile from './src/screens/Profile.js'
 import Search from './src/screens/Search.js'
 import Notifications from './src/screens/Notifications.js'
+import ResetPassword from './src/screens/ResetPassword.js'
 import { I18nManager} from 'react-native'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -84,8 +85,9 @@ function TabNavigator() {
 function StackNavigator(props) {
   return (
     <Stack.Navigator initialRouteName="Login">
-      <Stack.Screen name="Login" component={Login} initialParams={{login: props.login}} options={{headerShown: false}} />
-      <Stack.Screen name="Register" component={Register} />
+      <Stack.Screen name="Login" component={Login} options={{headerShown: false}} />
+      <Stack.Screen name="Register" initialParams={{registerRequest: props.registerRequest}} component={Register} />
+      <Stack.Screen name="Reset Password" component={ResetPassword} />
     </Stack.Navigator>
   )
 }
@@ -95,16 +97,39 @@ function StackNavigator(props) {
 export default class App extends Component {
   state = {
     isReady: false,
-    isLogged: false
+    isAuth: false,
+    isRegisterRequest: false,
+    user: null
   }
 
-  login = () => {
+  registerRequest = () => {
     this.setState({
-      isLogged: true,
+      isRegisterRequest: true
     })
   }
 
   componentDidMount() {
+    Firebase.checkUserAuth((user) => {
+      if(user){
+        if(!this.state.isRegisterRequest){
+          this.setState({
+            isAuth: true,
+          })
+        }
+        else {
+          this.setState({
+            isAuth: false,
+            isRegisterRequest: false
+          })
+        }
+      }
+      else {
+        this.setState({
+           isAuth: false,
+           isRegisterRequest: false
+         })
+      }
+    })
     Font.loadAsync({
       Roboto: require('native-base/Fonts/Roboto.ttf'),
       Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
@@ -115,20 +140,20 @@ export default class App extends Component {
   }
 
   render() {
-    const { isLogged } = this.state
+    const { isAuth, user } = this.state
 
     if (!this.state.isReady) {
       return <AppLoading />;
     }
 
     return (
-        <FirebaseProvider value={Firebase}>
+        <FirebaseProvider value={Firebase} user={user}>
           <StyleProvider style={getTheme(material)}>
             <Container>
               <NavigationContainer theme={MyTheme}>
-                {isLogged ?
+                {isAuth ?
                   <TabNavigator />
-                : <StackNavigator login={this.login} />}
+                : <StackNavigator registerRequest={this.registerRequest} />}
               </NavigationContainer>
             </Container>
           </StyleProvider>
