@@ -16,6 +16,7 @@
     "country-list": "^2.2.0",
     "expo": "~36.0.0",
     "expo-font": "~8.0.0",
+    "fbjs": "^1.0.0",
     "firebase": "^7.8.2",
     "native-base": "^2.13.8",
     "react": "~16.9.0",
