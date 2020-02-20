@@ -21,12 +21,11 @@ class Login extends Component {
   }
 
   submit = () => {
-    const { firebase } = this.props
     const { email, password } = this.state
-
+    const { firebase } = this.props
     firebase.loginWithEmail(email, password)
       .then(() => {
-        this.props.route.params.login()
+        console.log("success");
       })
       .catch((error) => {
         console.log(error)
@@ -64,7 +63,7 @@ class Login extends Component {
             <Text>
               Forget your password?
             </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Reset Password')}>
               <Text style={{fontWeight: 'bold', marginLeft: 5}}>
                 Reset Password
               </Text>
