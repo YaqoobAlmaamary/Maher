@@ -23,6 +23,12 @@ const Firebase = {
   sendPasswordResetEmail: email => {
     return firebase.auth().sendPasswordResetEmail(email)
   },
+  fetchSignInMethodsForEmail: email => {
+    return firebase.auth().fetchSignInMethodsForEmail(email)
+  },
+  getCurrentUser: () => {
+    return firebase.auth().currentUser
+  },
 
   // firestore
   createNewUser: userData => {
