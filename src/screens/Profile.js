@@ -3,6 +3,7 @@ import { View, Image, TouchableOpacity, StyleSheet } from 'react-native'
 import { Text, Header, Button } from 'native-base'
 import { createStackNavigator } from '@react-navigation/stack'
 import { withFirebaseHOC } from '../../config/Firebase'
+import EditProfile from './EditProfile'
 
 const Stack = createStackNavigator()
 
@@ -24,6 +25,7 @@ class ProfileInfo extends Component {
       })
   }
   render() {
+    console.log(this.props);
     const { user } = this.state
     this.props.navigation.setOptions({
       headerTitleAlign: 'center',
@@ -38,7 +40,7 @@ class ProfileInfo extends Component {
               source={require('../assets/no-image.png')}
             />
             <Text style={{fontSize: 18}}>{user.firstName+" "+user.lastName}</Text>
-            <TouchableOpacity style={styles.editButton}>
+            <TouchableOpacity style={styles.editButton} onPress={() => this.props.navigation.navigate('Edit profile')}>
               <Text style={styles.editButtonText}>Edit my profile</Text>
             </TouchableOpacity>
           </View>
@@ -53,6 +55,7 @@ function Profile({firebase}) {
   return (
     <Stack.Navigator initialRouteName="Profile">
       <Stack.Screen name="Profile" initialParams={{firebase}} component={ProfileInfo} />
+      <Stack.Screen name="Edit profile" component={EditProfile} />
     </Stack.Navigator>
   )
 }
