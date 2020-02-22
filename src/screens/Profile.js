@@ -2,23 +2,33 @@ import React, { Component } from 'react'
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native'
 import { Text, Header, Button } from 'native-base'
 import { createStackNavigator } from '@react-navigation/stack'
+import { withFirebaseHOC } from '../../config/Firebase'
 
 const Stack = createStackNavigator()
 
-function ProfileStackNavigator() {
-  const username = 'Ibrahim_A'
-  return (
-    <Stack.Navigator initialRouteName="Profile">
-      <Stack.Screen name="Profile" component={ProfileInfo}
-      options={{
-        title: username,
-        headerTitleAlign: 'center',
-      }} />
-    </Stack.Navigator>
-  )
-}
-
-function ProfileInfo() {
+class ProfileInfo extends Component {
+  state = {
+    user: {
+      username: '',
+      firstName: '',
+      lastName: '',
+    }
+  }
+  componentDidMount() {
+    const { firebase } = this.props.route.params
+    firebase.getUserDataByUid(firebase.getCurrentUser().uid)
+      .then((user) => {
+        this.setState({
+          user: user.data()
+        })
+      })
+  }
+  render() {
+    const { user } = this.state
+    this.props.navigation.setOptions({
+      headerTitleAlign: 'center',
+      title: user.username
+    })
     return (
       <View style={styles.container}>
         <View style={styles.infoContainer}>
@@ -27,7 +37,7 @@ function ProfileInfo() {
               style={styles.image}
               source={require('../assets/no-image.png')}
             />
-            <Text style={{fontSize: 18}}>{"Ibrahim AlSuhaim"}</Text>
+            <Text style={{fontSize: 18}}>{user.firstName+" "+user.lastName}</Text>
             <TouchableOpacity style={styles.editButton}>
               <Text style={styles.editButtonText}>Edit my profile</Text>
             </TouchableOpacity>
@@ -36,11 +46,14 @@ function ProfileInfo() {
         </View>
       </View>
     )
+  }
 }
 
-function Profile() {
+function Profile({firebase}) {
   return (
-    <ProfileStackNavigator />
+    <Stack.Navigator initialRouteName="Profile">
+      <Stack.Screen name="Profile" initialParams={{firebase}} component={ProfileInfo} />
+    </Stack.Navigator>
   )
 }
 
@@ -82,4 +95,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default Profile
+export default withFirebaseHOC(Profile)
