@@ -4,11 +4,25 @@ import { Text } from 'native-base'
 import { withFirebaseHOC } from '../../config/Firebase'
 
 class Home extends Component {
+  state = {
+    email: '',
+  }
+  componentDidMount() {
+
+    this.props.firebase.getUserDataByUid('j3QNiF8gYeQPVtp4Zofylpkvo0r2')
+      .then((querysnapshot) => {
+        this.setState({
+          email: querysnapshot.data().email
+        })
+      })
+
+  }
+
   render() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>Home!</Text>
-        <Text>{this.props.firebase.getCurrentUser().displayName}</Text>
+        <Text>{this.state.email}</Text>
         <TouchableOpacity onPress={() => this.props.firebase.signOut()}>
           <Text>signOut</Text>
         </TouchableOpacity>
