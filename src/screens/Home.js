@@ -21,7 +21,7 @@ class Home extends Component {
   render() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Home!</Text>
+        <Text>HomeEE!</Text>
         <Text>{this.state.email}</Text>
         <TouchableOpacity onPress={() => this.props.firebase.signOut()}>
           <Text>signOut</Text>
