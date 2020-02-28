@@ -46,8 +46,8 @@ const Firebase = {
       .where("username", "==", username).get()
   },
 
-  getUserDataByUid: (uid) => {
-    return firebase.firestore().collection('users').doc(uid).get()
+  userDataByUid: (uid) => {
+    return firebase.firestore().collection('users').where("uid", "==", uid)
   }
 }
 
