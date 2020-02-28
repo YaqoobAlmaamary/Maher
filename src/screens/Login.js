@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, StyleSheet, TextInput, Image, KeyboardAvoidingView, TouchableOpacity} from 'react-native'
+import { View, StyleSheet, TextInput, Image, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator} from 'react-native'
 import {
   Button,
   Text,
@@ -8,6 +8,7 @@ import {
   Item as FormItem,
   Input,
 } from 'native-base'
+import { TextInputWithMsg } from '../components/Inputs'
 import PasswordInput from "../components/PasswordInput"
 import Register from './Register'
 import MaherStatusBar from '../components/MaherStatusBar'
@@ -18,21 +19,28 @@ class Login extends Component {
   state = {
     email: '',
     password: '',
+    error: '',
+    submiting: false,
   }
 
   submit = () => {
     const { email, password } = this.state
     const { firebase } = this.props
+
+    this.setState({
+      submiting: true
+    })
+
     firebase.loginWithEmail(email, password)
-      .then(() => {
-        console.log("success");
-      })
       .catch((error) => {
-        console.log(error)
+        this.setState({
+          error: 'Invalid Email or Password',
+          submiting: false
+        })
       })
   }
   render() {
-    const { email, password } = this.state
+    const { email, password, error, submiting } = this.state
     const { navigation } = this.props
 
     return (
@@ -44,22 +52,40 @@ class Login extends Component {
               source={require('../assets/logo.png')}
             />
           </View>
-          <KeyboardAvoidingView behavior="padding" style={{flex: 1}}>
+          <KeyboardAvoidingView behavior="padding">
             <Form>
-              <FormItem floatingLabel style={styles.formItem}>
-                <Label style={styles.label}>Email</Label>
-                <Input placeholder="Email"
-                style={styles.textInput}
-                value={this.state.email}
-                onChangeText={(email) => this.setState({email})} />
-              </FormItem>
-              <PasswordInput handlePasswordChange={(password) => this.setState({password})} />
-              <Button full primary style={styles.loginBtn} onPress={this.submit} disabled= {email=="" || password == "" ? true : false}>
-                <Text style={styles.loginBtnText}> Log in </Text>
-              </Button>
+              <TextInputWithMsg
+                value={email}
+                error={error}
+                label={"Email"}
+                placeholder={"Email"}
+                onChangeText={(email) => {
+                  error &&
+                    this.setState({error: ''})
+                  !submiting && // if submiting is true, prevent from editing the text
+                    this.setState({email: email.trim()})
+                }}
+              />
+              <PasswordInput
+                value={password}
+                error={error !== '' ? ' ' : ''} // if error isn't empty then make error in the password field
+                handlePasswordChange={(password) => {
+                  error &&
+                    this.setState({error: ''})
+                  !submiting &&
+                    this.setState({
+                      password
+                    })
+                }} />
+              {submiting ?
+                <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
+              : <Button full primary style={styles.loginBtn} onPress={this.submit} disabled= {email=="" || password == "" ? true : false}>
+                  <Text style={styles.loginBtnText}> Log in </Text>
+                </Button>
+              }
             </Form>
           </KeyboardAvoidingView>
-          <View style={{flex: 1, flexDirection: 'row' ,flexWrap:'wrap', justifyContent: 'center', marginTop: 30}}>
+          <View style={{flexDirection: 'row', flexWrap:'wrap', justifyContent: 'center', marginTop: 30}}>
             <Text>
               Forget your password?
             </Text>
@@ -91,10 +117,12 @@ class Login extends Component {
 const styles = StyleSheet.create({
   container: {
     flex:1,
+    justifyContent: 'center'
   },
   logo: {
     alignSelf: 'center',
-    margin: 40
+    marginTop: 0,
+    margin: 30,
   },
   formItem: {
     backgroundColor: '#2f2f2f',
