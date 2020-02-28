@@ -99,7 +99,6 @@ export default class App extends Component {
     isReady: false,
     isAuth: false,
     isRegisterRequest: false,
-    user: null
   }
 
   registerRequest = () => {
@@ -114,40 +113,36 @@ export default class App extends Component {
         if(!this.state.isRegisterRequest){
           this.setState({
             isAuth: true,
+            isReady: true
           })
         }
         else {
           this.setState({
             isAuth: false,
-            isRegisterRequest: false
+            isRegisterRequest: false,
+            isReady: true,
           })
         }
       }
       else {
         this.setState({
            isAuth: false,
-           isRegisterRequest: false
+           isRegisterRequest: false,
+           isReady: true
          })
       }
-    })
-    Font.loadAsync({
-      Roboto: require('native-base/Fonts/Roboto.ttf'),
-      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-      ...Ionicons.font,
-    }).then(() => {
-      this.setState({ isReady: true })
     })
   }
 
   render() {
-    const { isAuth, user } = this.state
+    const { isAuth } = this.state
 
     if (!this.state.isReady) {
       return <AppLoading />;
     }
 
     return (
-        <FirebaseProvider value={Firebase} user={user}>
+        <FirebaseProvider value={Firebase}>
           <StyleProvider style={getTheme(material)}>
             <Container>
               <NavigationContainer theme={MyTheme}>
