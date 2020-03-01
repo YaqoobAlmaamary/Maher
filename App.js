@@ -108,29 +108,35 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    Firebase.checkUserAuth((user) => {
-      if(user){
-        if(!this.state.isRegisterRequest){
-          this.setState({
-            isAuth: true,
-            isReady: true
-          })
+    Font.loadAsync({
+      Roboto: require('native-base/Fonts/Roboto.ttf'),
+      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
+      ...Ionicons.font,
+    }).then(() => {
+      Firebase.checkUserAuth((user) => {
+        if(user){
+          if(!this.state.isRegisterRequest){
+            this.setState({
+              isAuth: true,
+              isReady: true
+            })
+          }
+          else {
+            this.setState({
+              isAuth: false,
+              isRegisterRequest: false,
+              isReady: true,
+            })
+          }
         }
         else {
           this.setState({
-            isAuth: false,
-            isRegisterRequest: false,
-            isReady: true,
-          })
+             isAuth: false,
+             isRegisterRequest: false,
+             isReady: true
+           })
         }
-      }
-      else {
-        this.setState({
-           isAuth: false,
-           isRegisterRequest: false,
-           isReady: true
-         })
-      }
+      })
     })
   }
 
