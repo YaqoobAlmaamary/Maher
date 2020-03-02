@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { AppLoading } from 'expo'
 import Firebase, { FirebaseProvider } from './config/Firebase'
-import { View, StyleSheet, Button} from 'react-native'
+import { View, StyleSheet, Button , SafeAreaView} from 'react-native'
 import {
   Header,
   Container,
@@ -23,6 +23,7 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack'
 import TextButton from './src/components/TextButton'
+
 
 
 const Stack = createStackNavigator()
@@ -149,15 +150,19 @@ export default class App extends Component {
 
     return (
         <FirebaseProvider value={Firebase}>
+        
           <StyleProvider style={getTheme(material)}>
             <Container>
+        <SafeAreaView style={{flex:1}}>
               <NavigationContainer theme={MyTheme}>
                 {isAuth ?
                   <TabNavigator />
                 : <StackNavigator registerRequest={this.registerRequest} />}
               </NavigationContainer>
+              </SafeAreaView>
             </Container>
           </StyleProvider>
+        
         </FirebaseProvider>
     )
   }
