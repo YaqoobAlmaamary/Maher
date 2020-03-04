@@ -48,6 +48,10 @@ const Firebase = {
 
   userDataByUid: (uid) => {
     return firebase.firestore().collection('users').where("uid", "==", uid)
+  },
+
+  getUserDataOnce: (uid) => {
+    return firebase.firestore().collection('users').doc(uid).get()
   }
 }
 
