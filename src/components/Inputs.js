@@ -5,7 +5,7 @@ import { Item as FormItem, Label, Input, Text } from 'native-base'
 export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, values}) {
   return (
     <View style={styles.nameInput}>
-      <FormItem floatingLabel style={[styles.formItem, { width: 157.5, marginRight:7.5}]}>
+      <FormItem floatingLabel style={[styles.formItem, { flex: 1, marginRight: 7.5}]}>
         <Label style={styles.label}>First name</Label>
         <Input placeholder="first name"
         style={styles.textInput}
@@ -16,7 +16,7 @@ export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, value
         onSubmitEditing={() => { lastNameInput._root.focus() }} //to move to lastname input using keyboard
         onChangeText={onFirstNameChange}/>
       </FormItem>
-      <FormItem floatingLabel style={[styles.formItem, { width: 157.5, marginLeft:7.5}]}>
+      <FormItem floatingLabel style={[styles.formItem, {flex: 1, marginLeft: 7.5}]}>
         <Label style={styles.label}>Last name</Label>
         <Input placeholder="last name"
         style={styles.textInput}
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   nameInput: {
-    width: 330,
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 })
