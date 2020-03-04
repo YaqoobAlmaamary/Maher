@@ -24,7 +24,7 @@ export default class CountryPicker extends Component {
         pickerTitle={"Please select your country"}
         showSearchBar={true}
         disablePicker={false}
-        changeAnimation={"none"}
+        changeAnimation={"slide"}
         searchBarPlaceHolder={"Search....."}
         showPickerTitle={true}
         searchBarContainerStyle={Styles.searchBarContainerStyle}
