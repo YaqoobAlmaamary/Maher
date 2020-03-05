@@ -109,6 +109,9 @@ class ProfileDrawer extends Component {
     })
   }
   render () {
+    this.props.navigation.setOptions({
+      tabBarVisible: true
+    })
     return (
       <View style={{flex:1}}>
         <Drawer.Navigator initialRouteName="Profile" drawerContent={props => <CustomDrawerContent showAlert={this.state.showAlert} showAlertFunc={this.showAlert} {...props} />}>
