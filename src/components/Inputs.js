@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Item as FormItem, Label, Input, Text } from 'native-base'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, values}) {
   return (
@@ -27,10 +28,16 @@ export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, value
     </View>
   )
 }
-export function TextInputWithMsg({autoFocus, value, label, placeholder, onChangeText, error}){
+export function TextInputWithMsg({autoFocus, value, label, placeholder, onChangeText, error, success}){
   return (
     <View>
-      <FormItem floatingLabel style={[styles.formItem, error !== '' && {borderColor: '#CF6679',}]}>
+      <FormItem floatingLabel
+        style={[styles.formItem,
+          (error != null && error !== '') &&
+            {borderColor: '#CF6679',},
+          (success != null && success !== '') &&
+          {borderColor: '#01A299',}]}
+        >
         <Label style={styles.label}>{label}</Label>
         <Input placeholder={placeholder}
         style={styles.textInput}
@@ -38,7 +45,8 @@ export function TextInputWithMsg({autoFocus, value, label, placeholder, onChange
         autoFocus={autoFocus}
         onChangeText={onChangeText} />
       </FormItem>
-      {error !== '' && <Text style={{marginLeft:20, color: '#CF6679'}}>{error}</Text>}
+      {(error != null && error !== '') && <Text style={{marginLeft:20, color: '#CF6679'}}>{error}</Text>}
+      {(success != null && success !== '') && <Text style={{marginLeft:20, color: '#01A299'}}><MaterialCommunityIcons name="check" size={18} /> {success}</Text>}
     </View>
   )
 }
