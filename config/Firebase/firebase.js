@@ -39,6 +39,14 @@ const Firebase = {
       .set(userData)
   },
 
+  updateUser: (uid, updatedData) => {
+    return firebase
+      .firestore()
+      .collection('users')
+      .doc(uid)
+      .update(updatedData)
+  },
+
   getUsernameData: username => {
     return firebase
       .firestore()
@@ -52,6 +60,11 @@ const Firebase = {
 
   getUserDataOnce: (uid) => {
     return firebase.firestore().collection('users').doc(uid).get()
+  },
+
+  // database
+  database: () => {
+    return firebase.database()
   }
 }
 
