@@ -63,7 +63,7 @@ class Login extends Component {
                   error &&
                     this.setState({error: ''})
                   !submiting && // if submiting is true, prevent from editing the text
-                    this.setState({email: email.trim()})
+                    this.setState({email: email.replace(/\s/g, '')})
                 }}
               />
               <PasswordInput
@@ -90,20 +90,26 @@ class Login extends Component {
               Forget your password?
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Reset Password')}>
-              <Text style={{fontWeight: 'bold', marginLeft: 5}}>
+              <Text style={{fontFamily: 'Roboto_medium' , fontSize: 17 ,color: '#BB86FC', marginLeft: 5, opacity: 0.8}}>
                 Reset Password
               </Text>
             </TouchableOpacity>
-            <View style={{width: "100%", alignItems: 'center', marginTop:30, marginBottom: 25}}>
-              <Text style={{color: 'rgba(255, 255, 255, 0.6)'}}>
-                <Text style={{color: 'rgba(255, 255, 255, 0.2)'}}>────────────  </Text>
-                OR
-                <Text style={{color: 'rgba(255, 255, 255, 0.2)'}}> ────────────</Text>
-                </Text>
+          </View>
+          <View style={{flexDirection: 'row', flexWrap:'wrap', justifyContent: 'center', marginTop: 25}}>
+            <View style={{flex: 1, justifyContent: 'center', paddingLeft: 10, paddingRight: 5}}>
+              <View style={{borderColor: 'rgba(255, 255, 255, 0.3)' ,borderBottomWidth: 1}} />
             </View>
+            <Text style={{color: 'rgba(255, 255, 255, 0.6)'}}>
+              OR
+            </Text>
+            <View style={{flex: 1, justifyContent: 'center', paddingLeft: 5, paddingRight: 10}}>
+              <View style={{borderColor: 'rgba(255, 255, 255, 0.3)' ,borderBottomWidth: 1}} />
+            </View>
+          </View>
+          <View style={{flexDirection: 'row', flexWrap:'wrap', justifyContent: 'center', marginTop: 25}}>
             <Text>Don't have an account?</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={{fontWeight: 'bold', marginLeft: 5}}>
+              <Text style={{fontFamily: 'Roboto_medium' , fontSize: 17 ,color: '#BB86FC', marginLeft: 5, opacity: 0.8}}>
                 Register
               </Text>
             </TouchableOpacity>
