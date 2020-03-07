@@ -30,16 +30,21 @@ export default class DateButton extends Component {
     return (
       <View>
         <View style= {{alignSelf: 'center'}}>
-          <TextButton onPress={this.showDatepicker} style={{fontSize:18, letterSpacing: 1.0, textTransform: 'capitalize'}}>
-            {date == '' ? 'Select Date' : 'Change Date'}
-          </TextButton>
+          {!show &&
+            <TextButton onPress={this.showDatepicker} style={{fontSize:18, letterSpacing: 1.0, textTransform: 'capitalize'}}>
+              {date == '' ? 'Select Date' : 'Change Date'}
+            </TextButton>
+          }
         </View>
         { show && <DateTimePicker
-                    value={date == '' ? new Date('1995-06-12') : date}
                     maximumDate={new Date(2020, 1, 1)}
+                    minimumDate={new Date(1900, 1, 1)}
+                    value={date == '' ? new Date('1995-06-12') : date}
                     mode={'date'}
-                    display={ Platform.OS === 'ios' ? "default" : "spinner" }
-                    onChange={this.setDateState} />
+                    display={"spinner"} // android only
+                    onChange={this.setDateState}
+                    style={{backgroundColor: 'rgba(255,255,255,0.87)', borderRadius: 4,}} // ios only
+                    />
         }
       </View>
     )
