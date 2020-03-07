@@ -27,17 +27,21 @@ export default class PasswordInput extends Component {
           keyboardType={Platform.OS == 'android'&& showPassword ? "visible-password" : "default"}
           secureTextEntry={showPassword ? false : true}
           placeholder="Password"
+          textContentType={"password"} // ios
+          autoCompleteType={"password"}// android
           style={styles.textInput}
           autoFocus={this.props.autoFocus == true ? true : false }
           onChangeText={(password) => this.props.handlePasswordChange(password)} />
         </FormItem>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.eyeButton} onPress={this.toggle}>
-            {showPassword ?
-              <MaterialCommunityIcons name="eye" size={30} color= '#BB86FC' />
-            : <MaterialCommunityIcons name="eye-off" size={30} color= 'rgba(255, 255, 255, 0.60)' />}
-          </TouchableOpacity>
-        </View>
+        {Platform.OS == 'android' &&
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.eyeButton} onPress={this.toggle}>
+                {showPassword ?
+                  <MaterialCommunityIcons name="eye" size={30} color= '#BB86FC' />
+                : <MaterialCommunityIcons name="eye-off" size={30} color= 'rgba(255, 255, 255, 0.60)' />}
+              </TouchableOpacity>
+            </View>
+        }
       </View>
     )
   }
@@ -59,7 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2f2f2f',
     borderColor: '#2f2f2f',
     paddingLeft: 5,
-    paddingRight: 50,
+    paddingRight: Platform.OS == 'ios' ? 5 : 50,
     margin: 15,
     marginBottom: 0,
     borderRadius: 4,
