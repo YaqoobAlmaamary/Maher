@@ -23,7 +23,7 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack'
 import TextButton from './src/components/TextButton'
-
+import solve from './solve'
 
 
 const Stack = createStackNavigator()
@@ -150,19 +150,17 @@ export default class App extends Component {
 
     return (
         <FirebaseProvider value={Firebase}>
-        
           <StyleProvider style={getTheme(material)}>
             <Container>
-        <SafeAreaView style={{flex:1}}>
-              <NavigationContainer theme={MyTheme}>
-                {isAuth ?
-                  <TabNavigator />
-                : <StackNavigator registerRequest={this.registerRequest} />}
-              </NavigationContainer>
+              <SafeAreaView style={{flex:1}}>
+                <NavigationContainer theme={MyTheme}>
+                  {isAuth ?
+                    <TabNavigator />
+                  : <StackNavigator registerRequest={this.registerRequest} />}
+                </NavigationContainer>
               </SafeAreaView>
             </Container>
           </StyleProvider>
-        
         </FirebaseProvider>
     )
   }
