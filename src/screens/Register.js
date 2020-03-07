@@ -17,6 +17,7 @@ import AwesomeAlert from 'react-native-awesome-alerts'
 import { useFocusEffect } from '@react-navigation/native'
 import { withFirebaseHOC } from '../../config/Firebase'
 import { NameInput, TextInputWithMsg } from '../components/Inputs'
+import moment from 'moment'
 
 function CancelAlert (props) {
   const {showAlertFunc, showAlert, hideAlert, navigation} = props
@@ -117,7 +118,7 @@ class Register extends Component {
     firstName: '',
     lastName: '',
     username: '',
-    date: '',
+    birthdate: '',
     gender: '',
     country: '',
     email: '',
@@ -148,10 +149,10 @@ class Register extends Component {
     }))
 
   }
-  setDate = (date) => {
-    date = date || this.state.date
+  setDate = (birthdate) => {
+    birthdate = birthdate || this.state.birthdate
     this.setState({
-      date,
+      birthdate,
     })
   }
   handleAddSkill = (skill) => {
@@ -163,9 +164,6 @@ class Register extends Component {
     this.setState({
       skills: this.state.skills.filter((skill) => skill !== removedSkill)
     })
-  }
-  getFormattedDate = (date) => {
-    return date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate()
   }
   showAlert = () => {
     this.setState({
@@ -263,11 +261,12 @@ class Register extends Component {
             firstName: this.state.firstName,
             lastName: this.state.lastName,
             username: this.state.username,
-            birthdate: this.getFormattedDate(this.state.date),
+            birthdate: this.state.birthdate,
             gender: this.state.gender,
             country: this.state.country,
             email: this.state.email,
-            skills: this.state.skills
+            skills: this.state.skills,
+            photoUrl: '',
         }
         response.user.sendEmailVerification()
           .then(() => {
@@ -276,13 +275,17 @@ class Register extends Component {
                 response.user.updateProfile({
                   displayName: userData.firstName+" "+userData.lastName,
                 }).then(() => {
-                  firebase.signOut().then(() => {
-                    this.setState({
-                      submiting: false
+                  firebase.signOut().
+                    then(() => {
+                      firebase.database().ref('usernames/'+response.user.uid).set(this.state.username)
+                        .then(() => {
+                          this.setState({
+                            submiting: false
+                          })
+                        })
                     })
                   })
                 })
-              })
           })
       })
       .catch((error) => {
@@ -326,14 +329,14 @@ class Register extends Component {
         onPress={() => {
           this.showAlert()
         }}
-        style={{fontSize: 16, margin: 15, letterSpacing: 0, textTransform: 'capitalize',}}>
+        style={{fontSize: 16, margin: 0, marginRight: 10, alignSelf: 'center', letterSpacing: 0, textTransform: 'capitalize',}}>
           Cancel
         </TextButton>
       ),
       headerLeft: null,
     })
 
-    const { step, firstName, lastName, date, gender, country, email, emailError,
+    const { step, firstName, lastName, birthdate, gender, country, email, emailError,
       submiting, username, usernameError, password, passwordError, skills } = this.state
     const radio_props = [
       {label: 'Male', value: 0 },
@@ -360,11 +363,14 @@ class Register extends Component {
       {// birth date and gender
         step == 2 &&
             <View style={styles.inner}>
-              <Text style={{fontSize: 21,  marginLeft:20}}>What's your birthday?</Text>
-              {date != '' &&
-                <Text style={{alignSelf: 'center', marginTop:20, color: 'rgba(255, 255, 255, 0.60)'}}>
-                  {this.getFormattedDate(date)}</Text>}
-              <DateButton date={date} setDate={this.setDate} />
+              <Text style={{fontSize: 21,  marginLeft:20, marginBottom: 10}}>What's your birthday?</Text>
+              {birthdate != '' &&
+                <Text style={{fontSize: 21, alignSelf: 'center', marginBottom: 5, color: 'rgba(255, 255, 255, 0.60)'}}>
+                  {moment(birthdate).isValid() &&
+                    moment(birthdate).format("YYYY-MM-DD")
+                  }
+                </Text>}
+              <DateButton date={birthdate} setDate={this.setDate} />
               <Text style={{fontSize: 21, marginTop: 30, marginLeft:20}}>What's your gender?</Text>
               <RadioForm
                 style={{alignSelf: 'center', marginTop:20}}
@@ -380,7 +386,7 @@ class Register extends Component {
                 animation={false}
                 onPress={(value) => {this.setState({gender:value})}}
               />
-              <TextButtonsNav disabled={(date === '' || gender === '') ? true : false}
+              <TextButtonsNav disabled={(birthdate === '' || gender === '') ? true : false}
                 back={{text:"Back", onPress:() => this.setState({step: this.state.step-1}) }}
                 next={{text:"Next", onPress:() => this.setState({step: 3}) }}
               />
@@ -418,7 +424,7 @@ class Register extends Component {
                   emailError &&
                     this.setState({emailError: ''})
                   !submiting && // if submiting is true, prevent from editing the text
-                    this.setState({email: email.trim()})
+                    this.setState({email: email.replace(/\s/g, '')})
                 }}
               />
               <TextButtonsNav disabled={email === '' || emailError !== '' ? true : false} submiting={submiting}
@@ -441,7 +447,7 @@ class Register extends Component {
                   usernameError &&
                     this.setState({usernameError: ''})
                   !submiting && // if submiting is true, prevent from editing the text
-                    this.setState({username: username.trim()})
+                    this.setState({username: username.replace(/\s/g, '')})
                 }}
               />
               <TextButtonsNav disabled={username == '' || usernameError !== '' ? true : false} submiting={submiting}
