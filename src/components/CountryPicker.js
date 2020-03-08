@@ -51,16 +51,8 @@ const Styles = StyleSheet.create({
     marginBottom: 10,
     flexDirection: "row",
     height: 40,
-    shadowOpacity: 1.0,
-    shadowRadius: 5,
-    shadowOffset: {
-      width: 1,
-      height: 1
-    },
     backgroundColor: "#121212",
-    shadowColor: "#d3d3d3",
     borderRadius: 10,
-    elevation: 3,
     marginLeft: 10,
     marginRight: 10
   },
@@ -96,19 +88,11 @@ const Styles = StyleSheet.create({
   },
   pickerStyle: {
     marginLeft: 18,
-    elevation:3,
     paddingRight: 25,
     marginRight: 10,
     marginBottom: 2,
-    shadowOpacity: 1.0,
-    shadowOffset: {
-      width: 1,
-      height: 1
-    },
     borderWidth:1,
-    shadowRadius: 10,
     backgroundColor: "#2f2f2f",
-    shadowColor: "#d3d3d3",
     borderRadius: 5,
     flexDirection: "row"
   }
