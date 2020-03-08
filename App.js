@@ -93,8 +93,8 @@ function StackNavigator(props) {
   )
 }
 
-//I18nManager.allowRTL(false)
-//I18nManager.forceRTL(false)
+I18nManager.allowRTL(false)
+I18nManager.forceRTL(false)
 export default class App extends Component {
   state = {
     isReady: false,
