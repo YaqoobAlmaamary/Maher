@@ -18,6 +18,8 @@ import SkillTag from '../components/SkillTag'
 import { withFirebaseHOC } from '../../config/Firebase'
 import moment from 'moment'
 import { checkConnectivity } from '../../utils/helper'
+import * as ImagePicker from 'expo-image-picker'
+import * as Permissions from 'expo-permissions'
 
 
 class EditProfile extends Component {
@@ -33,6 +35,8 @@ class EditProfile extends Component {
     email: '',
     password: '',
     skills: [],
+    photoUri: '', // from firebase
+    newPhotoUri: '', // to represent image selected by the user (it's temporary file)
     usernameError: '',
     usernameMsg: '',
     showCountryPicker: false,
@@ -41,10 +45,10 @@ class EditProfile extends Component {
     showEditSkills: false,
     submiting: false,
     noInternetAlert: false,
-    firstNoInternetAlert: false,
+    isTimePassed: false,
     unSavedAlert: false,
     isUpdating: false,
-    usernames: []
+    usernames: null,
 
   }
   isUpdateDisabled = () => {
@@ -58,7 +62,13 @@ class EditProfile extends Component {
     const { userBefore, firstName, lastName, username, birthdate, gender, country, skills } = this.state
 
     return firstName == userBefore.firstName && lastName == userBefore.lastName && username == userBefore.username &&
-      !this.isDateChanged() && gender == userBefore.gender && country == userBefore.country && userBefore.skills == skills
+      !this.isDateChanged() && gender == userBefore.gender && country == userBefore.country && userBefore.skills == skills && !this.isPhotoChanged()
+  }
+  isPhotoChanged = () => {
+    if(this.state.newPhotoUri !== '')
+      return true
+    else
+      return this.state.userBefore.photoUri !== this.state.photoUri // if it's set and then removed
   }
   usernameOnChange = (username) => {
     const { firebase } = this.props
@@ -112,6 +122,7 @@ class EditProfile extends Component {
   }
   updateUser = () => {
     const { firebase } = this.props
+    const { newPhotoUri, photoUri } = this.state
     const updatedData = {
       firstName: this.state.firstName,
       lastName: this.state.lastName,
@@ -123,23 +134,36 @@ class EditProfile extends Component {
     }
     const { uid } = firebase.getCurrentUser()
 
-    if(this.state.userBefore.username !== this.state.username){ // if username is changed, update realtime database for usernames first
-      firebase.updateUser(uid, updatedData)
+    firebase.updateUser(uid, updatedData)
+    .then(() => {
+      firebase.database().ref('usernames/'+uid).set(this.state.username)
       .then(() => {
-        firebase.database().ref('usernames/'+uid).set(this.state.username)
-        .then(() => this.props.navigation.goBack())
-        .catch(console.log)
+        if(newPhotoUri !== ''){
+          this.uriToBlob(newPhotoUri)
+            .then((blob) => {
+              this.uploadToFirebase(blob)
+                .then((newPhotoRef) => {
+                  newPhotoRef.getDownloadURL()
+                    .then((url) => {
+                      firebase.updateUser(uid, {photoUri: url})
+                        .then(() => this.props.navigation.goBack())
+                    })
+                })
+                .catch(console.log)
+            })
+            .catch(console.log)
+        }
+        else if(photoUri == '') { // if user removed his photo
+          firebase.updateUser(uid, {photoUri: ''})
+            .then(() => this.props.navigation.goBack())
+        }
+        else { // if photo doesn't change
+          this.props.navigation.goBack()
+        }
       })
       .catch(console.log)
-    }
-    else { // if username isn't changed, update directly
-      firebase.updateUser(uid, updatedData)
-      .then(() => {
-        this.props.navigation.goBack()
-      })
-      .catch(console.log)
-    }
-
+    })
+    .catch(console.log)
   }
   ifConnected = () => {
     this.setState({
@@ -153,9 +177,77 @@ class EditProfile extends Component {
       noInternetAlert: true
     })
   }
+  _pickImage = async () => {
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [4, 3],
+    quality: 0.7,
+  })
+
+  if (!result.cancelled) {
+    this.setState({ newPhotoUri: result.uri })
+    }
+  }
+  getPermissionAsync = async () => {
+    if (Constants.platform.ios) {
+      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+    }
+  }
+  uriToBlob = (uri) => {
+
+    return new Promise((resolve, reject) => {
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.onload = function() {
+        // return the blob
+        resolve(xhr.response);
+      };
+
+      xhr.onerror = function() {
+        // something went wrong
+        reject(new Error('uriToBlob failed'));
+      };
+
+      // this helps us get a blob
+      xhr.responseType = 'blob';
+
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+
+    });
+
+  }
+  uploadToFirebase = (blob) => {
+      const { firebase } = this.props
+      const { uid } = firebase.getCurrentUser()
+    return new Promise((resolve, reject)=>{
+
+      const newPhotoRef = firebase.storage().ref('profilePhotos').child(uid+'.jpg');
+      newPhotoRef.put(blob, {contentType: 'image/jpeg'})
+          .then(()=>{
+
+            blob.close();
+
+            resolve(newPhotoRef);
+
+          }).catch((error)=>{
+
+            reject(error);
+
+          });
+
+        });
+
+
+  }
   componentDidMount() {
     checkConnectivity(() => {} , () => this.setState({firstNoInternetAlert: true})) //check connection
-
+    setTimeout(() => this.setState({isTimePassed: true}) , 5000)
     const { navigation } = this.props
     navigation.dangerouslyGetParent().dangerouslyGetParent().setOptions({ //hide tab bar
       tabBarVisible: false
@@ -164,7 +256,7 @@ class EditProfile extends Component {
     const { firebase } = this.props
     const uid = firebase.getCurrentUser().uid
 
-    //get usernames list
+    //get usernames list and listen for changes
     firebase.database().ref('usernames/')
       .on('value', (snapshot) => {
         this.setState({
@@ -176,10 +268,8 @@ class EditProfile extends Component {
     firebase.getUserDataOnce(uid)
       .then((querysnapshot) => {
         const user = querysnapshot.data()
-        this.setState({ // two seperate setState ? cause of the labels above inputs.
-          isReady: true
-        })
         this.setState({
+          isReady: true,
           userBefore: {
             ...user,
             ["birthdate"]: new Date(moment(user.birthdate.seconds*1000).toISOString())
@@ -192,6 +282,7 @@ class EditProfile extends Component {
           country: user.country,
           email: user.email,
           skills: user.skills,
+          photoUri: user.photoUri,
         })
       })
   }
@@ -199,11 +290,17 @@ class EditProfile extends Component {
     this.props.firebase.database().ref('usernames/').off()
   }
   render() {
-    if(!this.state.isReady && !this.state.FirstNoInternetAlert) {
+    if((this.state.isTimePassed && this.state.usernames == null) || this.state.firstNoInternetAlert) {
+      return (
+        <TimeOutAlert isTimePassed={true}
+         navigation={this.props.navigation}/>
+      )
+    }
+    else if(!this.state.isReady) {
       return (
         <View style={{alignItems: 'center'}}>
           <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
-          <Text style={{color: '#BB86FC'}}>Getting your data</Text>
+          <Text style={{color: '#BB86FC'}}>Getting data</Text>
         </View>
       )
     }
@@ -215,9 +312,9 @@ class EditProfile extends Component {
         </View>
       )
     }
-    const { userBefore, firstName, lastName, birthdate, gender, country, email, showCountryPicker, showGenderRadio,
+    const { userBefore, firstName, lastName, birthdate, gender, country, email, photoUri, newPhotoUri, showCountryPicker, showGenderRadio,
       showDatepicker, submiting, username, usernameError, usernameMsg, skills, showEditSkills,
-      unSavedAlert, noInternetAlert, firstNoInternetAlert } = this.state
+      unSavedAlert, noInternetAlert, isTimePassed } = this.state
     const { navigation } = this.props
     navigation.setOptions({
       headerTitleAlign: 'center',
@@ -246,12 +343,22 @@ class EditProfile extends Component {
               <View style={styles.imageContainer}>
                 <Image
                   style={styles.image}
-                  source={require('../assets/no-image.png')}
+                  source={photoUri == '' && newPhotoUri == '' ? require('../assets/no-image.png')
+                  : newPhotoUri == '' ? {uri:photoUri} : {uri:newPhotoUri}}
                 />
-                {false &&
-                  <TextButton style={{fontSize: 16}}>
-                    Change Profile Photo
-                  </TextButton>}
+                {photoUri == '' && newPhotoUri == '' ?
+                  <TextButton style={{fontSize: 16, color: '#01A299',}} onPress={this._pickImage}>
+                    Add Profile Photo
+                  </TextButton>
+                : <View>
+                    <TextButton style={{fontSize: 14, color: '#CF6679', margin:5}} onPress={() => this.setState({photoUri: '', newPhotoUri: ''})}>
+                      Remove Profile Photo
+                    </TextButton>
+                    <TextButton style={{fontSize: 14, margin:5}} onPress={this._pickImage}>
+                      Change Profile Photo
+                    </TextButton>
+                  </View>
+                }
               </View>
               <TextInputWithMsg
                 value={username}
@@ -399,9 +506,6 @@ class EditProfile extends Component {
         <NoInternetAlert noInternetAlert={noInternetAlert}
          hideAlert={() => this.setState({noInternetAlert: false})}
          tryAgain={() => checkConnectivity(this.ifConnected, this.ifNotConnected)}/>
-         <FirstNoInternetAlert firstNoInternetAlert={firstNoInternetAlert}
-          navigation={navigation}
-          tryAgain={() => this.forceUpdate()}/>
       </View>
     )
   }
@@ -486,12 +590,12 @@ function NoInternetAlert({noInternetAlert, tryAgain, hideAlert}) {
   )
 }
 
-function FirstNoInternetAlert({firstNoInternetAlert, tryAgain, navigation}){
-  firstNoInternetAlert &&
+function TimeOutAlert({isTimePassed, navigation}){
+  isTimePassed &&
     Keyboard.dismiss() //disable keyboard when alert shows up
   return (
     <AwesomeAlert
-        show={firstNoInternetAlert}
+        show={isTimePassed}
         showProgress={false}
         title="No Internet Connection"
         message="Seems there is a connection problem. Please Try Again Later"
