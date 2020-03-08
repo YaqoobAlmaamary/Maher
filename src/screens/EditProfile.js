@@ -24,9 +24,9 @@ class EditProfile extends Component {
   state = {
     isReady: false,
     userBefore: {},
-    firstName: ' ',
-    lastName: ' ',
-    username: ' ',
+    firstName: '',
+    lastName: '',
+    username: '',
     birthdate: '',
     gender: '',
     country: '',
@@ -63,6 +63,9 @@ class EditProfile extends Component {
   usernameOnChange = (username) => {
     const { firebase } = this.props
     const { userBefore, usernames } = this.state
+    this.setState({
+      username
+    })
 
     if(username.length < 3) {
       this.setState(() => ({
@@ -75,18 +78,17 @@ class EditProfile extends Component {
         usernameError: '',
         usernameMsg: '',
       }))
-      if (userBefore.username != username) {
-        if(usernames.includes(username.toLowerCase())){
+      if(usernames.includes(username.toLowerCase())){
+        if (userBefore.username !== username) {
           this.setState({
             usernameError: 'username already exists'
           })
         }
-        else {
-          this.setState({
-            usernameMsg: ' ',//just space is enough
-          })
-        }
-
+      }
+      else {
+        this.setState({
+          usernameMsg: ' ',//just space is enough
+        })
       }
     }
   }
@@ -246,9 +248,10 @@ class EditProfile extends Component {
                   style={styles.image}
                   source={require('../assets/no-image.png')}
                 />
-                <TextButton style={{fontSize: 16}}>
-                  Change Profile Photo
-                </TextButton>
+                {false &&
+                  <TextButton style={{fontSize: 16}}>
+                    Change Profile Photo
+                  </TextButton>}
               </View>
               <TextInputWithMsg
                 value={username}
@@ -256,12 +259,7 @@ class EditProfile extends Component {
                 success={usernameMsg}
                 label={"User name"}
                 placeholder={"username"}
-                onChangeText={(username) => {
-                  this.setState({
-                    username: username.replace(/\s/g, '')
-                  })
-                  this.usernameOnChange(username)
-                }}
+                onChangeText={this.usernameOnChange}
               />
               {submiting && <ActivityIndicator style={{marginLeft:20, alignSelf: 'flex-start'}} size="small" color='#BB86FC' />}
               <NameInput
@@ -311,11 +309,12 @@ class EditProfile extends Component {
                 <Text style={{margin: 10, marginBottom: 5}}>Email Address</Text>
                 <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
                   <Text style={{marginLeft: 15, marginBottom: 5, marginRight: 5, color: 'rgba(255, 255, 255, 0.6)'}}>{email}</Text>
-                  <View style={{alignItems: 'center'}}>
-                    <TextButton style={{margin: 0}}>
-                      <MaterialCommunityIcons name="square-edit-outline" size={20} />
-                    </TextButton>
-                  </View>
+                  {false &&
+                    <View style={{alignItems: 'center'}}>
+                      <TextButton style={{margin: 0}}>
+                        <MaterialCommunityIcons name="square-edit-outline" size={20} />
+                      </TextButton>
+                    </View>}
                 </View>
                 <Text style={{margin: 10, marginBottom: 5}}>Country</Text>
                 {!showCountryPicker &&
