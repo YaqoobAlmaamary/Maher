@@ -55,10 +55,12 @@ class ProfileInfo extends Component {
       <View style={styles.container}>
         <View style={styles.infoContainer}>
           <View style={styles.nameConatiner}>
-            <Image
-              style={styles.image}
-              source={require('../assets/no-image.png')}
-            />
+            {user.photoUri !== null &&
+              <Image
+                style={styles.image}
+                source={user.photoUri == '' ? require('../assets/no-image.png') : {uri: user.photoUri}}
+              />
+            }
             <Text style={{fontSize: 18}}>{user.firstName+" "+user.lastName}</Text>
             <TouchableOpacity style={styles.editButton} onPress={() => this.props.navigation.navigate('Edit profile')}>
               <Text style={styles.editButtonText}>Edit my profile</Text>
