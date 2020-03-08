@@ -62,10 +62,16 @@ const Firebase = {
     return firebase.firestore().collection('users').doc(uid).get()
   },
 
-  // database
+  // real-time database
   database: () => {
     return firebase.database()
+  },
+
+  // storage
+  storage: () => {
+    return firebase.storage()
   }
+
 }
 
 export default Firebase
