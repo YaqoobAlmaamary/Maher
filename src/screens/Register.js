@@ -266,7 +266,7 @@ class Register extends Component {
             country: this.state.country,
             email: this.state.email,
             skills: this.state.skills,
-            photoUrl: '',
+            photoUri: '',
         }
         response.user.sendEmailVerification()
           .then(() => {
@@ -356,8 +356,8 @@ class Register extends Component {
                 onFirstNameChange={(firstName) => this.setState({firstName})}
                 onLastNameChange={(lastName) => this.setState({lastName})}
                 returnKeyType={"next"}
-                onSubmitEditing={(firstName == '' || lastName == '') ? null : () => this.setState({step: 2})}/>
-              <TextButtonsNav disabled={(firstName == '' || lastName == '') ? true : false}
+                onSubmitEditing={(firstName.trim() == '' || lastName.trim() == '') ? null : () => this.setState({step: 2})}/>
+              <TextButtonsNav disabled={(firstName.trim() == '' || lastName.trim() == '') ? true : false}
                 next={{text:"Next", onPress:() => this.setState({step: 2}) }}
               />
             </Form>}

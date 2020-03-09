@@ -53,7 +53,7 @@ class EditProfile extends Component {
   }
   isUpdateDisabled = () => {
     const { userBefore, firstName, lastName, username, birthdate, gender, country, usernameError} = this.state
-    if(firstName == '' || lastName == '' || usernameError != '')
+    if(firstName.trim() == '' || lastName.trim() == '' || usernameError != '')
       return true
 
     return this.isNotChanged()
