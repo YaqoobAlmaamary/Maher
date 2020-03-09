@@ -114,7 +114,7 @@ function TextButtonsNav({back, next, disabled, submiting}){
 
 class Register extends Component {
   state = {
-    step: 7,
+    step: 1,
     firstName: '',
     lastName: '',
     username: '',
