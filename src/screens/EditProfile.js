@@ -53,7 +53,7 @@ class EditProfile extends Component {
   }
   isUpdateDisabled = () => {
     const { userBefore, firstName, lastName, username, birthdate, gender, country, usernameError} = this.state
-    if(firstName.trim() == '' || lastName.trim() == '' || usernameError != '')
+    if(firstName.trim() == '' || lastName.trim() == '' || username.trim() == '' || usernameError != '')
       return true
 
     return this.isNotChanged()
@@ -74,7 +74,7 @@ class EditProfile extends Component {
     const { firebase } = this.props
     const { userBefore, usernames } = this.state
     this.setState({
-      username
+      username: username.split(' ').join('')
     })
 
     if(username.length < 3) {
