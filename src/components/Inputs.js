@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native'
 import { Item as FormItem, Label, Input, Text } from 'native-base'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
-export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, values}) {
+export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, values, returnKeyType, onSubmitEditing}) {
   return (
     <View style={styles.nameInput}>
       <FormItem floatingLabel style={[styles.formItem, { flex: 1, marginRight: 7.5}]}>
@@ -23,12 +23,15 @@ export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, value
         style={styles.textInput}
         value={values.lastName}
         getRef={input => { lastNameInput = input }} // make ref to this input to be used on sumbiting firstname
-        onChangeText={onLastNameChange} />
+        onChangeText={onLastNameChange}
+        returnKeyType={returnKeyType}
+        blurOnSubmit={ false }
+        onSubmitEditing={onSubmitEditing} />
       </FormItem>
     </View>
   )
 }
-export function TextInputWithMsg({autoFocus, value, label, placeholder, onChangeText, error, success}){
+export function TextInputWithMsg({autoFocus, value, label, placeholder, onChangeText, error, success, onSubmitEditing, returnKeyType, blurOnSubmit}){
   return (
     <View>
       <FormItem floatingLabel
@@ -43,7 +46,10 @@ export function TextInputWithMsg({autoFocus, value, label, placeholder, onChange
         style={styles.textInput}
         value={value}
         autoFocus={autoFocus}
-        onChangeText={onChangeText} />
+        blurOnSubmit={blurOnSubmit}
+        onChangeText={onChangeText}
+        onSubmitEditing={onSubmitEditing}
+        returnKeyType={returnKeyType} />
       </FormItem>
       {(error != null && error !== '') && <Text style={{marginLeft:20, color: '#CF6679'}}>{error}</Text>}
       {(success != null && success !== '') && <Text style={{marginLeft:20, color: '#01A299'}}><MaterialCommunityIcons name="check" size={18} /> {success}</Text>}

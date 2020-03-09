@@ -30,6 +30,9 @@ export default class PasswordInput extends Component {
           textContentType={"password"} // ios
           autoCompleteType={"password"}// android
           style={styles.textInput}
+          blurOnSubmit={this.props.blurOnSubmit}
+          returnKeyType={this.props.returnKeyType}
+          onSubmitEditing={this.props.onSubmitEditing}
           autoFocus={this.props.autoFocus == true ? true : false }
           onChangeText={(password) => this.props.handlePasswordChange(password)} />
         </FormItem>

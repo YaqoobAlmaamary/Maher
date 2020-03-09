@@ -114,7 +114,7 @@ function TextButtonsNav({back, next, disabled, submiting}){
 
 class Register extends Component {
   state = {
-    step: 1,
+    step: 7,
     firstName: '',
     lastName: '',
     username: '',
@@ -354,7 +354,9 @@ class Register extends Component {
                 autoFocus={true}
                 values={{firstName: firstName, lastName: lastName}}
                 onFirstNameChange={(firstName) => this.setState({firstName})}
-                onLastNameChange={(lastName) => this.setState({lastName})} />
+                onLastNameChange={(lastName) => this.setState({lastName})}
+                returnKeyType={"next"}
+                onSubmitEditing={(firstName == '' || lastName == '') ? null : () => this.setState({step: 2})}/>
               <TextButtonsNav disabled={(firstName == '' || lastName == '') ? true : false}
                 next={{text:"Next", onPress:() => this.setState({step: 2}) }}
               />
@@ -420,6 +422,9 @@ class Register extends Component {
                 error={emailError}
                 label={"Email"}
                 placeholder={"Email"}
+                blurOnSubmit={false}
+                returnKeyType={"next"}
+                onSubmitEditing={this.validateEmail}
                 onChangeText={(email) => {
                   emailError &&
                     this.setState({emailError: ''})
@@ -443,6 +448,9 @@ class Register extends Component {
                 error={usernameError}
                 label={"User name"}
                 placeholder={"username"}
+                blurOnSubmit={false}
+                returnKeyType={"next"}
+                onSubmitEditing={this.validateUsername}
                 onChangeText={(username) => {
                   usernameError &&
                     this.setState({usernameError: ''})
@@ -464,6 +472,9 @@ class Register extends Component {
                 value={password}
                 autoFocus={true}
                 error={passwordError}
+                blurOnSubmit={false}
+                returnKeyType={"next"}
+                onSubmitEditing={passwordError === '' ? () => this.setState({step: 7}) : null}
                 handlePasswordChange={this.handlePasswordChange} />
               {passwordError !== '' && <Text style={{marginLeft:20, color: '#CF6679'}}>{passwordError}</Text>}
               <TextButtonsNav disabled={password === '' || passwordError !== '' ? true : false}
@@ -476,9 +487,6 @@ class Register extends Component {
         step == 7 &&
             <Form style={styles.inner}>
               <Text style={{fontSize: 21,  marginLeft:20}}>Add your skills</Text>
-              <Text style={{fontSize: 14,  marginLeft: 20, marginRight: 20, color: 'rgba(255, 255, 255, 0.6)'}}>
-                add at least one skill to continue
-              </Text>
               <SkillsInput
               handleAddSkill={this.handleAddSkill}
               autoFocus={true} />
