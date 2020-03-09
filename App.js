@@ -18,13 +18,17 @@ import Profile from './src/screens/Profile.js'
 import Search from './src/screens/Search.js'
 import Notifications from './src/screens/Notifications.js'
 import ResetPassword from './src/screens/ResetPassword.js'
-import { I18nManager} from 'react-native'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack'
 import TextButton from './src/components/TextButton'
 import solve from './solve'
-
+import RNRestart from "react-native-restart"
+import { I18nManager} from 'react-native'
+I18nManager.allowRTL(false)
+I18nManager.forceRTL(false)
+if (I18nManager.isRTL) 
+RNRestart.Restart();
 
 const Stack = createStackNavigator()
 
@@ -93,8 +97,6 @@ function StackNavigator(props) {
   )
 }
 
-I18nManager.allowRTL(false)
-I18nManager.forceRTL(false)
 export default class App extends Component {
   state = {
     isReady: false,
