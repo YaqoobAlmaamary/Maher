@@ -455,7 +455,7 @@ class Register extends Component {
                   usernameError &&
                     this.setState({usernameError: ''})
                   !submiting && // if submiting is true, prevent from editing the text
-                    this.setState({username: username.replace(/\s/g, '')})
+                    this.setState({username: username.split(' ').join('')})
                 }}
               />
               <TextButtonsNav disabled={username == '' || usernameError !== '' ? true : false} submiting={submiting}
