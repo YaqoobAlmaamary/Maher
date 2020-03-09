@@ -507,9 +507,9 @@ class Register extends Component {
                     skills added: {skills.length}
                   </Text>}
               </View>
-              <TextButtonsNav disabled={skills.length === 0 ? true : false}
+              <TextButtonsNav disabled={false}
                 back={{text:"Back", onPress:() => this.setState({step: this.state.step-1}) }}
-                next={{text:"Register", onPress:this.confirmRegister }}
+                next={{text:skills.length === 0 ? "Skip & Register":"Register", onPress:this.confirmRegister }}
               />
               <ConfirmationModal
               navigation={navigation}
