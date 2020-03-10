@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native'
 import { Item as FormItem, Label, Input, Text } from 'native-base'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
-export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, values, returnKeyType, onSubmitEditing}) {
+export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, values, returnKeyType, onSubmitEditing, blurOnSubmitLast}) {
   return (
     <View style={styles.nameInput}>
       <FormItem floatingLabel style={[styles.formItem, { flex: 1, marginRight: 7.5}]}>
@@ -25,7 +25,7 @@ export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, value
         getRef={input => { lastNameInput = input }} // make ref to this input to be used on sumbiting firstname
         onChangeText={onLastNameChange}
         returnKeyType={returnKeyType}
-        blurOnSubmit={ false }
+        blurOnSubmit={ blurOnSubmitLast }
         onSubmitEditing={onSubmitEditing} />
       </FormItem>
     </View>

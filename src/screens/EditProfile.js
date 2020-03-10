@@ -372,7 +372,8 @@ class EditProfile extends Component {
               <NameInput
                 values={{firstName: firstName, lastName: lastName}}
                 onFirstNameChange={(firstName) => this.setState({firstName})}
-                onLastNameChange={(lastName) => this.setState({lastName})} />
+                onLastNameChange={(lastName) => this.setState({lastName})}
+                blurOnSubmitLast={true}/>
               <Text style={{marginLeft: 20, marginTop: 15, alignSelf: 'flex-start'}}>
                 Your Skills <Text style={{color: 'rgba(255, 255, 255, 0.6)'}}>{skills.length}</Text>
               </Text>

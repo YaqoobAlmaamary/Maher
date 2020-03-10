@@ -356,6 +356,7 @@ class Register extends Component {
                 onFirstNameChange={(firstName) => this.setState({firstName})}
                 onLastNameChange={(lastName) => this.setState({lastName})}
                 returnKeyType={"next"}
+                blurOnSubmitLast={false}
                 onSubmitEditing={(firstName.trim() == '' || lastName.trim() == '') ? null : () => this.setState({step: 2})}/>
               <TextButtonsNav disabled={(firstName.trim() == '' || lastName.trim() == '') ? true : false}
                 next={{text:"Next", onPress:() => this.setState({step: 2}) }}
