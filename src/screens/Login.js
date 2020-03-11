@@ -33,10 +33,24 @@ class Login extends Component {
 
     firebase.loginWithEmail(email, password)
       .catch((error) => {
-        this.setState({
-          error: 'Invalid Email or Password',
-          submiting: false
-        })
+        if(error.code == 'auth/network-request-failed'){
+          this.setState({
+            error: 'Please check your internet connection',
+            submiting: false
+          })
+        }
+        else if(error.code == 'auth/invalid-email'){
+          this.setState({
+            error: 'Invalid Email',
+            submiting: false
+          })
+        }
+        else {
+          this.setState({
+            error: 'The email or password is incorrect',
+            submiting: false
+          })
+        }
       })
   }
   render() {
@@ -45,7 +59,6 @@ class Login extends Component {
 
     return (
         <View style={styles.container}>
-          <MaherStatusBar backgroundColor='#121212' barStyle="light-content" />
           <View style={styles.logo}>
             <Image
               style={{width: 150, height: 150}}
