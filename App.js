@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { AppLoading } from 'expo'
 import Firebase, { FirebaseProvider } from './config/Firebase'
-import { View, StyleSheet, Button , SafeAreaView} from 'react-native'
+import { View, StyleSheet, Button , StatusBar} from 'react-native'
 import {
   Header,
   Container,
@@ -27,8 +27,8 @@ import RNRestart from "react-native-restart"
 import { I18nManager} from 'react-native'
 I18nManager.allowRTL(false)
 I18nManager.forceRTL(false)
-if (I18nManager.isRTL) 
-RNRestart.Restart();
+if (I18nManager.isRTL)
+  RNRestart.Restart();
 
 const Stack = createStackNavigator()
 
@@ -72,9 +72,6 @@ function TabNavigator() {
             },
           })}
           tabBarOptions={{
-            style: {
-              height: 55
-            },
             activeTintColor: '#BB86FC',
             inactiveTintColor: 'rgba(255, 255, 255, 0.6)',
             showLabel: false,
@@ -154,13 +151,12 @@ export default class App extends Component {
         <FirebaseProvider value={Firebase}>
           <StyleProvider style={getTheme(material)}>
             <Container>
-              <SafeAreaView style={{flex:1}}>
-                <NavigationContainer theme={MyTheme}>
-                  {isAuth ?
-                    <TabNavigator />
-                  : <StackNavigator registerRequest={this.registerRequest} />}
-                </NavigationContainer>
-              </SafeAreaView>
+              <StatusBar barStyle='light-content' />
+              <NavigationContainer theme={MyTheme}>
+                {isAuth ?
+                  <TabNavigator />
+                : <StackNavigator registerRequest={this.registerRequest} />}
+              </NavigationContainer>
             </Container>
           </StyleProvider>
         </FirebaseProvider>
