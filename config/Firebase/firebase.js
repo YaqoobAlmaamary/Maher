@@ -62,6 +62,18 @@ const Firebase = {
     return firebase.firestore().collection('users').doc(uid).get()
   },
 
+  hackathonDataById: (id) => {
+    return firebase.firestore().collection("hackathons").where("hackathonId", "==", id)
+  },
+
+  getHackathonDataOnce: (hackathonId) => {
+    return firebase.firestore().collection('hackathons').doc(hackathonId).get()
+  },
+
+  allHackathons: () => {
+    return firebase.firestore().collection("hackathons")
+  },
+
   // real-time database
   database: () => {
     return firebase.database()
