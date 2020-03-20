@@ -66,12 +66,15 @@ const Firebase = {
     return firebase.firestore().collection("hackathons").where("hackathonId", "==", id)
   },
 
-  getHackathonDataOnce: (hackathonId) => {
-    return firebase.firestore().collection('hackathons').doc(hackathonId).get()
-  },
-
   allHackathons: () => {
     return firebase.firestore().collection("hackathons")
+  },
+
+  getHackathonDoc: (hackathonId) => {
+    return firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
   },
 
   // real-time database
