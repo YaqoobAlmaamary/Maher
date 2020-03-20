@@ -29,8 +29,7 @@ class Search extends Component {
   }
   componentDidMount() {
     const { firebase } = this.props
-    let index
-    firebase.allHackathons()
+    this.unsubscribe = firebase.allHackathons()
       .onSnapshot((querysnapshot) => {
         querysnapshot.forEach((doc) => {
           if(this.isInList(doc.data())){
@@ -47,7 +46,7 @@ class Search extends Component {
       })
   }
   componentWillUnmount() {
-
+    this.unsubscribe()
   }
   render() {
     const {query, hackathons, result} = this.state
