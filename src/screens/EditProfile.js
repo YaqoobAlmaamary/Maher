@@ -21,7 +21,6 @@ import { checkConnectivity } from '../../utils/helper'
 import * as ImagePicker from 'expo-image-picker'
 import * as Permissions from 'expo-permissions'
 
-
 class EditProfile extends Component {
   state = {
     isReady: false,
@@ -287,6 +286,7 @@ class EditProfile extends Component {
       })
   }
   componentWillUnmount() {
+    // unsubscribe from realtime listener
     this.props.firebase.database().ref('usernames/').off()
   }
   render() {
