@@ -131,6 +131,7 @@ class Register extends Component {
     submiting: false,
     modalVisible: false
   }
+
   handlePasswordChange = (password) => {
     //todo ---> check password
     if(this.state.passwordError === '' && password.length < 6) {
@@ -175,6 +176,7 @@ class Register extends Component {
       showAlert: false
     })
   }
+
   validateEmail = () => { // in step 4
     const { firebase } = this.props
     const { email } = this.state
@@ -209,6 +211,7 @@ class Register extends Component {
         }))
     }
   }
+
   validateUsername = () => { // in step 5
     const { firebase } = this.props
     const { username } = this.state
@@ -243,6 +246,7 @@ class Register extends Component {
         })
     }
   }
+
   confirmRegister = () => {
     const { firebase } = this.props
     const { email, password } = this.state
@@ -308,7 +312,7 @@ class Register extends Component {
         if(error.code === 'auth/weak-password'){
           this.setState({
             step: 6,
-            passwordError: 'password is too week',
+            passwordError: 'password is too weak',
           })
         }
         else {

@@ -1,12 +1,9 @@
+// Import statments 
 import React, { Component } from 'react'
 import { AppLoading } from 'expo'
 import Firebase, { FirebaseProvider } from './config/Firebase'
-import { View, StyleSheet, Button , StatusBar} from 'react-native'
-import {
-  Header,
-  Container,
-  StyleProvider,
-} from 'native-base'
+import { View, StyleSheet, Button , StatusBar } from 'react-native'
+import { Header, Container, StyleProvider, } from 'native-base'
 import * as Font from 'expo-font'
 import { Ionicons, FontAwesome, MaterialIcons } from '@expo/vector-icons'
 import getTheme from './native-base-theme/components'
@@ -25,6 +22,11 @@ import TextButton from './src/components/TextButton'
 import solve from './solve'
 import RNRestart from "react-native-restart"
 import { I18nManager} from 'react-native'
+import {decode, encode} from 'base-64'
+
+if (!global.btoa) { global.btoa = encode }
+if (!global.atob) { global.atob = decode }
+
 I18nManager.allowRTL(false)
 I18nManager.forceRTL(false)
 if (I18nManager.isRTL)
@@ -94,6 +96,7 @@ function StackNavigator(props) {
   )
 }
 
+// "Main function"
 export default class App extends Component {
   state = {
     isReady: false,
