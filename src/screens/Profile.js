@@ -30,14 +30,17 @@ class ProfileInfo extends Component {
     const firebase = Firebase
     const uid = firebase.getCurrentUser().uid
 
-    // listen to user date changes
-    firebase.userDataByUid(uid).onSnapshot((snapshot) => {
+    //Listen for profile updates, and assign it to unsubscribe to be called in componentWillUnmount to unsubscribe this listener
+    this.unsubscribe = firebase.userDataByUid(uid).onSnapshot((snapshot) => {
       snapshot.docChanges().forEach((change) => { // whenever user date is changing
         this.setState({
           user: change.doc.data()
         })
       })
     })
+  }
+  componentWillUnmount() {
+    this.unsubscribe()
   }
   render() {
     const { user } = this.state

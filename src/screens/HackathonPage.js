@@ -8,9 +8,59 @@ import moment from 'moment'
 class HackathonPage extends Component {
   state={
     hackathon: {},
+    user: {},
     judges: [],
     isReady: false,
-    isJudgesReady: false
+    isJudgesReady: false,
+    isRegistered: false,
+    isUserJudge: false
+  }
+
+  registerForHackathon = async () => {
+    const { firebase } = this.props
+    const { user, hackathon } = this.state
+    const updatedHackathons = user.hackathons == null ?
+      {hackathons: [{hackathonId: hackathon.hackathonId, type: 'participant'}]}
+    : { hackathons: user.hackathons.concat({hackathonId: hackathon.hackathonId, role: 'participant'}) }
+    const updatedParticipants = {participants: hackathon.participants.concat(firebase.getCurrentUser().uid)}
+    await firebase.getHackathonDoc(hackathon.hackathonId).update(updatedParticipants)
+
+    const { hackathons } = updatedHackathons
+    const { participants } = updatedParticipants
+    firebase.updateUser(firebase.getCurrentUser().uid, updatedHackathons)
+      .then(() => {
+        this.setState({
+          hackathon: {...hackathon, participants},
+          user: {...user, hackathons},
+          isRegistered: true
+        })
+      })
+  }
+
+  leaveHackathon = async () => {
+    const { firebase } = this.props
+    const { user, hackathon } = this.state
+    if(user.hackathons == null || user.hackathons.length == 0) {
+      return
+    }
+
+    const updatedHackathons = {hackathons: user.hackathons.filter((hackathon) => (
+      hackathon.hackathonId != this.state.hackathon.hackathonId
+    ))}
+    const updatedParticipants = {participants: hackathon.participants.filter((participantId) => participantId != firebase.getCurrentUser().uid)}
+
+    await firebase.getHackathonDoc(hackathon.hackathonId).update(updatedParticipants)
+
+    const { hackathons } = updatedHackathons
+    const { participants } = updatedParticipants
+    firebase.updateUser(firebase.getCurrentUser().uid, updatedHackathons)
+      .then(() => {
+        this.setState({
+          hackathon: {...hackathon, participants},
+          user: {...user, hackathons},
+          isRegistered: false
+        })
+      })
   }
 
   addJudgeToState = async (judgeId) => {
@@ -26,9 +76,36 @@ class HackathonPage extends Component {
     const { hackathonId } = this.props.route.params
     const { firebase } = this.props
 
-    const snapshot = await firebase.getHackathonDataOnce(hackathonId)
+    //Listen for hackathon updates, and assign it to unsubscribe to be called in componentWillUnmount to unsubscribe this listener
+    this.unsubscribe = firebase.hackathonDataById(hackathonId).onSnapshot((snapshot) => {
+      snapshot.docChanges().forEach((change) => { // whenever hackathon data is changed
+        this.setState({
+          hackathon: change.doc.data()
+        })
+      })
+    })
+
+    const user = await firebase.getUserDataOnce(firebase.getCurrentUser().uid)
+    const snapshot = await firebase.getHackathonDoc(hackathonId).get()
+
+
+    if(user.data().hackathons != null){
+      const found = user.data().hackathons.filter((hackathon) => hackathonId == hackathon.hackathonId)
+      if(found.length > 0) {
+        this.setState({
+          isRegistered: true
+        })
+      }
+    }
+    if(snapshot.data().judges.includes(firebase.getCurrentUser().uid)){
+      this.setState({
+        isUserJudge: true
+      })
+    }
+
     this.setState({
       hackathon: snapshot.data(),
+      user: user.data(),
       isReady: true
     })
     const addJudgesPromises = this.state.hackathon.judges.map(this.addJudgeToState)
@@ -38,8 +115,11 @@ class HackathonPage extends Component {
       isJudgesReady: true
     })
   }
+  componentWillUnmount() {
+    this.unsubscribe()
+  }
   render() {
-    const { hackathon, isReady, judges, isJudgesReady } = this.state
+    const { hackathon, isReady, judges, isJudgesReady, isRegistered, isUserJudge } = this.state
     this.props.navigation.setOptions({
       title: this.props.route.params.name,
       headerTitleAlign: 'center'
@@ -61,9 +141,17 @@ class HackathonPage extends Component {
               <Text style={styles.h3}>End</Text>
               <Text style={styles.point}>{moment(hackathon.endDateTime.seconds*1000).format("LLL")}</Text>
             </View>
-            <Button style={styles.registerBtn}>
-              <Text style={styles.btnText}>Register for this hackathon</Text>
-            </Button>
+            {isUserJudge ?
+              <Text style={styles.judgeMsg}>You are a judge in this hackathon</Text>
+
+            : isRegistered ?
+                <Button style={styles.registerBtn} onPress={this.leaveHackathon}>
+                  <Text style={styles.btnText}>Leave This Hackathon</Text>
+                </Button>
+              : <Button style={styles.registerBtn} onPress={this.registerForHackathon}>
+                  <Text style={styles.btnText}>Register for this hackathon</Text>
+                </Button>
+            }
             <Text style={styles.locationLink}><Entypo size={16} name="location-pin" />{hackathon.locationAddress}</Text>
             <Text style={styles.title}>{hackathon.name}</Text>
             <Text style={styles.description}>{hackathon.description}</Text>
@@ -137,6 +225,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     textTransform: 'uppercase'
+  },
+  judgeMsg: {
+    color: '#01A299' ,
+    textAlign: 'center',
+    fontSize: 18,
+    textTransform: 'uppercase',
+    margin: 15,
   },
   title: {
     margin: 10,

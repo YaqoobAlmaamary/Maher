@@ -55,8 +55,8 @@ class Home extends Component {
     // will return a list of all hackathons 
     // sorted from newest to oldest 
     return (
+      <View style={ {marginTop: 40, } }> 
       <FlatList
-        style={ { marginTop: 40, } } 
         data={ this.state.hackathons }
         renderItem={ 
           ( {item} ) => 
@@ -65,7 +65,7 @@ class Home extends Component {
           goToHackathon={() => this.props.navigation.navigate("Hackathon Page", {hackathonId: item.hackathonId, name: item.name})}
           />
         }
-        />   
+        /></View>   
     )
   }
 }
