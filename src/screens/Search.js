@@ -17,36 +17,51 @@ class Search extends Component {
     hackathons: [],
     result: []
   }
-  isInList = (data) => {
-    const { hackathons } = this.state
-    return hackathons.find(hackathon => hackathon.hackathonId === data.hackathonId)
-  }
   search = (query) => {
     this.setState({
       query,
-      result: this.state.hackathons.filter((hackathon) => hackathon.name.toLowerCase().search(query.toLowerCase()) !== -1)
+      result: this.state.hackathons.filter((hackathon) => hackathon.name.toLowerCase().search(query.toLowerCase().trim()) !== -1)
     })
   }
   componentDidMount() {
     const { firebase } = this.props
-    this.unsubscribe = firebase.allHackathons()
+    let unSortedHackathons
+
+    // listen for changes in hackathons that are open
+    this.unsubscribe = firebase.allHackathons().where("status", "==", "open")
       .onSnapshot((querysnapshot) => {
-        querysnapshot.forEach((doc) => {
-          if(this.isInList(doc.data())){
-            this.setState({
-              hackathons: this.state.hackathons.filter((hackathon) => hackathon.hackathonId !== doc.data().hackathonId).concat(doc.data())
-            })
+        querysnapshot.docChanges().forEach((change) => {
+          if(change.type === "added") {
+            // add it directly
+            unSortedHackathons = this.state.hackathons.concat(change.doc.data())
           }
-          else {
-            this.setState({
-              hackathons: this.state.hackathons.concat(doc.data())
-            })
+          if(change.type === "modified"){
+            // if it's modefied then remove it from the state and then add it
+            unSortedHackathons =
+              this.state.hackathons.filter((hackathon) =>
+                hackathon.hackathonId !== change.doc.data().hackathonId
+              ).concat(change.doc.data())
           }
+          if(change.type === "removed"){
+            // if hackathon status is changed or it is removed, then remove it directly
+            unSortedHackathons =
+              this.state.hackathons.filter((hackathon) =>
+                hackathon.hackathonId !== change.doc.data().hackathonId
+              )
+          }
+          // sort based on closest startDateTime
+          const sortedHackathons = unSortedHackathons.sort(( a, b ) => ( a.startDateTime.seconds - b.startDateTime.seconds ) )
+          // apply changes to the state
+          this.setState({
+            hackathons: sortedHackathons
+          })
         })
       })
   }
   componentWillUnmount() {
-    this.unsubscribe()
+    // unsubscribe from listener only if it was defined
+    if(this.unsubscribe)
+      this.unsubscribe()
   }
   render() {
     const {query, hackathons, result} = this.state
