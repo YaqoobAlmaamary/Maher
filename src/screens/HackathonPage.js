@@ -75,7 +75,7 @@ class HackathonPage extends Component {
     })
     const { hackathonId } = this.props.route.params
     const { firebase } = this.props
-
+    
     //Listen for hackathon updates, and assign it to unsubscribe to be called in componentWillUnmount to unsubscribe this listener
     this.unsubscribe = firebase.hackathonDataById(hackathonId).onSnapshot((snapshot) => {
       snapshot.docChanges().forEach((change) => { // whenever hackathon data is changed
@@ -116,7 +116,9 @@ class HackathonPage extends Component {
     })
   }
   componentWillUnmount() {
-    this.unsubscribe()
+    // unsubscribe from listener only if it was defined
+    if(this.unsubscribe)
+      this.unsubscribe()
   }
   render() {
     const { hackathon, isReady, judges, isJudgesReady, isRegistered, isUserJudge } = this.state
