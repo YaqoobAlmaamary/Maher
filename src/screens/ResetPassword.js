@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, KeyboardAvoidingView, TouchableOpacity, StyleSheet, Modal, ActivityIndicator } from 'react-native'
+import { View, KeyboardAvoidingView, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, Platform } from 'react-native'
 import { Form, Item as FormItem, Label, Button, Input, Text } from 'native-base'
 import { TextInputWithMsg } from '../components/Inputs'
 import { withFirebaseHOC } from '../../config/Firebase'
@@ -76,7 +76,7 @@ class ResetPassword extends Component {
     const { email, emailError, submiting, modalVisible } = this.state
 
     return (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS == "ios" ? "padding" : ""}>
           <Form style={styles.inner}>
             <Text style={{fontSize: 21,  marginLeft:20}}>Enter your registered email</Text>
             <TextInputWithMsg
