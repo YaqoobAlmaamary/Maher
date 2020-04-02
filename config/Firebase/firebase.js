@@ -77,6 +77,13 @@ const Firebase = {
       .doc(hackathonId)
   },
 
+  getTeamDoc: (teamId) => {
+    return firebase
+      .firestore()
+      .collection('teams')
+      .doc(teamId)
+  },
+
   // real-time database
   database: () => {
     return firebase.database()
