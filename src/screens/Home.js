@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import { View, TouchableOpacity, Image, SectionList, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, Image, SectionList, StyleSheet, ActivityIndicator } from 'react-native'
 import { Text } from 'native-base'
 import { withFirebaseHOC } from '../../config/Firebase'
 import { FlatList } from 'react-native'
-import HackathonCard from '../components/HackathonCard'
+import HomeHackathonCard from '../components/HomeHackathonCard'
 import HackathonPage from '../screens/HackathonPage'
 import { createStackNavigator } from '@react-navigation/stack'
 
@@ -18,6 +18,7 @@ class Home extends Component {
     super( props );
 
     this.state = {
+      isReady: false,
       // This will hold the list of hackathons to be displayed
       hackathons : [],
       hackathonsParticipated : [],
@@ -27,13 +28,23 @@ class Home extends Component {
 
   }
 
+
+  getSections = () => {
+    let sections = []
+    if(this.state.hackathonsParticipated.length > 0)
+      sections.push({ title: "Participant ", data: this.state.hackathonsParticipated })
+    if(this.state.hackathonsJudged.length > 0)
+      sections.push({ title: "Judge ", data: this.state.hackathonsJudged })
+    if(this.state.hackathonsCreated.length > 0)
+      sections.push({ title: "Creator ", data: this.state.hackathonsCreated })
+
+    return sections
+  }
+
   // when the component will first be rendered to the
   // DOM it will call getHackathons
   componentDidMount() {
     this.getHackathons();
-  }
-  componentWillUnmount() {
-
   }
 
   // this function will fill the list of hackathons
@@ -49,14 +60,12 @@ class Home extends Component {
     let buffer3 = this.state.hackathonsCreated // to hold created hackathons
 
     // subscribe to firestore and get a snapshot of the data
-    // onSnapshot first call it will read all data 
-    // after that it will only listen 
+    // onSnapshot first call it will read all data
+    // after that it will only listen
     this.subscription = firebase.allHackathons().where( "status", "==", "open" )
       .onSnapshot( (querySnapshot) => {
         // for any change check on the data
-        console.log( "before loop" );
         querySnapshot.docChanges().forEach( ( change ) => {
-          console.log( "after loop" );
           // get the hackathon in a variable
           var hackathon = change.doc.data();
           var isParticipant = hackathon.participants.find( (item) => item === userId ); // is he a participant
@@ -65,11 +74,10 @@ class Home extends Component {
           // added hackathon to the firestore
           if( change.type === "added" ){
             // user is participant in the current hackathon
-            console.log( "added" )
-            if( isParticipant ){              
+            if( isParticipant ){
               buffer1.push( hackathon )
             }
-            // user is a judge 
+            // user is a judge
             if( isJudge ){
               buffer2.push( hackathon )
             }
@@ -80,17 +88,16 @@ class Home extends Component {
           }
           // if the given data is modified
           else if( change.type === "modified" ){
-            console.log( "modifies" );
 
-            var filter = ( array ) => { 
-              return array.filter( ( item ) => item.hackathonId !== hackathon.hackathonId ) 
+            var filter = ( array ) => {
+              return array.filter( ( item ) => item.hackathonId !== hackathon.hackathonId )
             };
             // remove the modified hackathon from the buffers
             buffer1 = filter( buffer1 );
             buffer2 = filter( buffer2 );
             buffer3 = filter( buffer3 );
             // if participant then add hackathon
-            if( isParticipant ){             
+            if( isParticipant ){
               buffer1.push( hackathon );
             }
             // if judge then add hackathon
@@ -105,16 +112,15 @@ class Home extends Component {
           // if data is removed
           else if( change.type === "removed" ){
 
-            var filter = ( array ) => { 
-              return array.filter( ( item ) => item.hackathonId !== hackathon.hackathonId ) 
+            var filter = ( array ) => {
+              return array.filter( ( item ) => item.hackathonId !== hackathon.hackathonId )
             };
-            console.log( "removed" );
-            if( isParticipant ){         
+            if( isParticipant ){
               // remove it
               buffer1 = filter( buffer1 );
             }
             if( isJudge ){
-              // remove it 
+              // remove it
               buffer2 = filter( buffer2 );
             }
             if( isCreator ){
@@ -123,34 +129,44 @@ class Home extends Component {
             }
           }
           // the buffers become the state for the component
-          this.setState({ 
-            hackathonsParticipated: buffer1, 
-            hackathonsJudged: buffer2, 
-            hackathonsCreated: buffer3 
+          this.setState({
+            hackathonsParticipated: buffer1,
+            hackathonsJudged: buffer2,
+            hackathonsCreated: buffer3,
+            isReady: true
           });
         })
       });
   }
 
+
   componentWillUnmount() {
     // unsubscribe from listener only if it was defined
-    if(this.unsubscribe)
-      this.unsubscribe()
+    if(this.subscription)
+      this.subscription()
   }
 
   // render using section list instead of flatlist
   render() {
+    if(!this.state.isReady){
+      return (
+        <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
+      )
+    }
+    else if(this.getSections().length == 0){
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', margin: 50 }}>
+          <Text style={styles.noHackathonMsg}>You aren't participated in any hackathon</Text>
+        </View>
+      )
+    }
     return (
       <View style={ { flex:1, } }>
-        <SectionList 
-          sections={[
-            { title: "Participant ", data: this.state.hackathonsParticipated },
-            { title: "Judge ", data: this.state.hackathonsJudged },
-            { title: "Creator ", data: this.state.hackathonsCreated },
-          ]}
+        <SectionList
+          sections={this.getSections()}
           renderItem={
             ( {item} ) => (
-              <HackathonCard
+              <HomeHackathonCard
               hackathon={item}
               goToHackathon={() => this.props.navigation.navigate("Hackathon Page", {hackathonId: item.hackathonId, name: item.name})}
               />)
@@ -190,10 +206,9 @@ function HomeStack(props) {
 
   // this is the logo that appears on top
   // of the screen
-  const logoLocation = "https://firebasestorage.googleapis.com/v0/b/graduation-project-b9ef2.appspot.com/o/logos%2Flogo-2.png?alt=media&token=bb03096c-dcb8-4f5e-abe8-63023826a81a";
   const logo = <Image
-    source={ { uri: logoLocation } } 
-    style={ { width: 100, height: 20, } } />;
+    source={ require("../assets/logo-2.png") }
+    style={ { width: 130, height: 30, } } />;
 
 
   props.navigation.setOptions({
@@ -201,7 +216,7 @@ function HomeStack(props) {
   })
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Home" component={ HomeWithFirebase } options={ { headerTitle: () => logo, } } />
+      <Stack.Screen name="Home" component={ HomeWithFirebase } options={ { headerTitle: () => logo, headerTitleAlign: "center" } } />
       <Stack.Screen name="Hackathon Page" component={ HackathonPage } />
     </Stack.Navigator>
   );
@@ -209,12 +224,18 @@ function HomeStack(props) {
 
 const styles = StyleSheet.create( {
   sectionHeader: {
-    backgroundColor: "#0f0f0f", 
+    color: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: "#0f0f0f",
     paddingTop: 5,
-    paddingBottom: 10, 
-    paddingLeft: 10, 
-    fontSize: 25,
+    paddingBottom: 10,
+    paddingLeft: 10,
+    fontSize: 23,
   },
+  noHackathonMsg: {
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center'
+  }
 } );
 
 export default HomeStack;
