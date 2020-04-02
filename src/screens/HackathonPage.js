@@ -13,21 +13,22 @@ class HackathonPage extends Component {
     isReady: false,
     isJudgesReady: false,
     isRegistered: false,
-    isUserJudge: false
+    isUserJudge: false,
+    isUserManager: false
   }
 
   registerForHackathon = async () => {
     const { firebase } = this.props
     const { user, hackathon } = this.state
-    const updatedHackathons = user.hackathons == null ?
+    const updatedUserHackathons = user.hackathons == null ?
       {hackathons: [{hackathonId: hackathon.hackathonId, type: 'participant'}]}
     : { hackathons: user.hackathons.concat({hackathonId: hackathon.hackathonId, role: 'participant'}) }
     const updatedParticipants = {participants: hackathon.participants.concat(firebase.getCurrentUser().uid)}
     await firebase.getHackathonDoc(hackathon.hackathonId).update(updatedParticipants)
 
-    const { hackathons } = updatedHackathons
+    const { hackathons } = updatedUserHackathons
     const { participants } = updatedParticipants
-    firebase.updateUser(firebase.getCurrentUser().uid, updatedHackathons)
+    firebase.updateUser(firebase.getCurrentUser().uid, updatedUserHackathons)
       .then(() => {
         this.setState({
           hackathon: {...hackathon, participants},
@@ -44,16 +45,44 @@ class HackathonPage extends Component {
       return
     }
 
-    const updatedHackathons = {hackathons: user.hackathons.filter((hackathon) => (
+    const updatedUserHackathons = {hackathons: user.hackathons.filter((hackathon) => (
       hackathon.hackathonId != this.state.hackathon.hackathonId
     ))}
     const updatedParticipants = {participants: hackathon.participants.filter((participantId) => participantId != firebase.getCurrentUser().uid)}
 
+    const userTeam = hackathon.teams.find(team => team.members.includes(firebase.getCurrentUser().uid))
+    if(userTeam){
+      let updatedHackathonTeams
+      let updatedTeam
+
+      const teamData = await firebase.getTeamDoc(userTeam.teamId).get()
+
+      if(userTeam.members.length == 1){
+        updatedHackathonTeams = hackathon.teams.filter(team => team.teamId != userTeam.teamId)
+        await firebase.getTeamDoc(userTeam.teamId).delete()
+      }
+      else {
+        updatedTeam = teamData.data().members.filter(member => member.uid != firebase.getCurrentUser().uid)
+        const userPosition = teamData.data().members.find(member => member.uid == firebase.getCurrentUser().uid)
+        if(userPosition.type == 'leader'){
+          someMember = updatedTeam.shift()
+          updatedTeam = updatedTeam.unShift({uid: someMember.uid, type: "leader"})
+        }
+
+        updatedHackathonTeams =
+          hackathon.teams.filter(team =>
+            team.teamId != userTeam.teamId).concat({teamId: userTeam.teamId ,members: userTeam.members.filter(member => member != firebase.getCurrentUser().uid)})
+      }
+
+      await firebase.getHackathonDoc(hackathon.hackathonId).update({teams: updatedHackathonTeams})
+      if(userTeam.members.length > 1)
+        await firebase.getTeamDoc(userTeam.teamId).update({members: updatedTeam})
+    }
     await firebase.getHackathonDoc(hackathon.hackathonId).update(updatedParticipants)
 
-    const { hackathons } = updatedHackathons
+    const { hackathons } = updatedUserHackathons
     const { participants } = updatedParticipants
-    firebase.updateUser(firebase.getCurrentUser().uid, updatedHackathons)
+    firebase.updateUser(firebase.getCurrentUser().uid, updatedUserHackathons)
       .then(() => {
         this.setState({
           hackathon: {...hackathon, participants},
@@ -75,7 +104,7 @@ class HackathonPage extends Component {
     })
     const { hackathonId } = this.props.route.params
     const { firebase } = this.props
-    
+
     //Listen for hackathon updates, and assign it to unsubscribe to be called in componentWillUnmount to unsubscribe this listener
     this.unsubscribe = firebase.hackathonDataById(hackathonId).onSnapshot((snapshot) => {
       snapshot.docChanges().forEach((change) => { // whenever hackathon data is changed
@@ -88,16 +117,18 @@ class HackathonPage extends Component {
     const user = await firebase.getUserDataOnce(firebase.getCurrentUser().uid)
     const snapshot = await firebase.getHackathonDoc(hackathonId).get()
 
-
-    if(user.data().hackathons != null){
-      const found = user.data().hackathons.filter((hackathon) => hackathonId == hackathon.hackathonId)
-      if(found.length > 0) {
-        this.setState({
-          isRegistered: true
-        })
-      }
+    const { uid } = firebase.getCurrentUser()
+    if(snapshot.data().participants.includes(uid)){
+      this.setState({
+        isRegistered: true
+      })
     }
-    if(snapshot.data().judges.includes(firebase.getCurrentUser().uid)){
+    if(snapshot.data().createdBy == uid){
+      this.setState({
+        isUserManager: true
+      })
+    }
+    if(snapshot.data().judges.includes(uid)){
       this.setState({
         isUserJudge: true
       })
@@ -121,7 +152,7 @@ class HackathonPage extends Component {
       this.unsubscribe()
   }
   render() {
-    const { hackathon, isReady, judges, isJudgesReady, isRegistered, isUserJudge } = this.state
+    const { hackathon, isReady, judges, isJudgesReady, isRegistered, isUserJudge, isUserManager } = this.state
     this.props.navigation.setOptions({
       title: this.props.route.params.name,
       headerTitleAlign: 'center'
@@ -143,7 +174,9 @@ class HackathonPage extends Component {
               <Text style={styles.h3}>End</Text>
               <Text style={styles.point}>{moment(hackathon.endDateTime.seconds*1000).format("LLL")}</Text>
             </View>
-            {isUserJudge ?
+            {isUserManager ?
+              <Text style={styles.judgeMsg}>You are the hackathon manager</Text>
+            : isUserJudge ?
               <Text style={styles.judgeMsg}>You are a judge in this hackathon</Text>
 
             : isRegistered ?
