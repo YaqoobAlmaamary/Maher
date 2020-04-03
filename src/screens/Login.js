@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, StyleSheet, TextInput, Image, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator} from 'react-native'
+import { View, StyleSheet, TextInput, Image, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator, Platform} from 'react-native'
 import {
   Button,
   Text,
