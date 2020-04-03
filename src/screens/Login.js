@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, StyleSheet, TextInput, Image, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator} from 'react-native'
+import { View, StyleSheet, TextInput, Image, KeyboardAvoidingView, TouchableOpacity, ActivityIndicator, Platform} from 'react-native'
 import {
   Button,
   Text,
@@ -65,7 +65,7 @@ class Login extends Component {
               source={require('../assets/logo.png')}
             />
           </View>
-          <KeyboardAvoidingView behavior="padding">
+          <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : ""}>
             <Form>
               <TextInputWithMsg
                 value={email}

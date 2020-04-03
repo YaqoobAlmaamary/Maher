@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView,
-  Keyboard, BackHandler, ActivityIndicator, Modal, TouchableOpacity} from 'react-native'
+  Keyboard, BackHandler, ActivityIndicator, Modal, TouchableOpacity, Platform} from 'react-native'
 import {
   Text,
   Form,
@@ -344,7 +344,7 @@ class Register extends Component {
     ]
 
     return (
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS == "ios" ? "padding" : ""}>
 
       {// firstName and lastName
         step == 1 &&
