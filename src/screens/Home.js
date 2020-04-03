@@ -130,9 +130,9 @@ class Home extends Component {
           }
           // the buffers become the state for the component
           this.setState({
-            hackathonsParticipated: buffer1,
-            hackathonsJudged: buffer2,
-            hackathonsCreated: buffer3,
+            hackathonsParticipated: buffer1.sort(( a, b ) => ( a.startDateTime.seconds - b.startDateTime.seconds ) ),
+            hackathonsJudged: buffer2.sort(( a, b ) => ( a.startDateTime.seconds - b.startDateTime.seconds ) ),
+            hackathonsCreated: buffer3.sort(( a, b ) => ( a.startDateTime.seconds - b.startDateTime.seconds ) ),
             isReady: true
           });
         })
