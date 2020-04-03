@@ -65,7 +65,7 @@ class Login extends Component {
               source={require('../assets/logo.png')}
             />
           </View>
-          <KeyboardAvoidingView behavior="padding">
+          <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : ""}>
             <Form>
               <TextInputWithMsg
                 value={email}
