@@ -198,10 +198,10 @@ class HackathonPage extends Component {
               <Text style={styles.judgeMsg}>You are a judge in this hackathon</Text>
 
             : isRegistered ?
-                <Button style={styles.registerBtn} onPress={() => this.setState({showLeaveAlert: true})}>
+                <Button disabled={hackathon.status != 'open'} style={styles.registerBtn} onPress={() => this.setState({showLeaveAlert: true})}>
                   <Text style={styles.btnText}>Leave This Hackathon</Text>
                 </Button>
-              : <Button style={styles.registerBtn} onPress={() => this.setState({showRegisterAlert: true})}>
+              : <Button disabled={hackathon.status != 'open'} style={styles.registerBtn} onPress={() => this.setState({showRegisterAlert: true})}>
                   <Text style={styles.btnText}>Register for this hackathon</Text>
                 </Button>
             }
