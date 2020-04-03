@@ -4,6 +4,7 @@ import { Text, Button } from 'native-base'
 import { Entypo, MaterialCommunityIcons } from '@expo/vector-icons'
 import {withFirebaseHOC} from '../../config/Firebase'
 import moment from 'moment'
+import AwesomeAlert from 'react-native-awesome-alerts'
 
 class HackathonPage extends Component {
   state={
@@ -14,10 +15,16 @@ class HackathonPage extends Component {
     isJudgesReady: false,
     isRegistered: false,
     isUserJudge: false,
-    isUserManager: false
+    isUserManager: false,
+    showRegisterAlert: false,
+    showLeaveAlert: false,
+    submiting: false,
   }
 
   registerForHackathon = async () => {
+    this.setState({
+      submiting: true
+    })
     const { firebase } = this.props
     const { user, hackathon } = this.state
     const updatedUserHackathons = user.hackathons == null ?
@@ -33,12 +40,17 @@ class HackathonPage extends Component {
         this.setState({
           hackathon: {...hackathon, participants},
           user: {...user, hackathons},
-          isRegistered: true
+          isRegistered: true,
+          showRegisterAlert: false,
+          submiting: false
         })
       })
   }
 
   leaveHackathon = async () => {
+    this.setState({
+      submiting: true
+    })
     const { firebase } = this.props
     const { user, hackathon } = this.state
     if(user.hackathons == null || user.hackathons.length == 0) {
@@ -87,7 +99,9 @@ class HackathonPage extends Component {
         this.setState({
           hackathon: {...hackathon, participants},
           user: {...user, hackathons},
-          isRegistered: false
+          isRegistered: false,
+          showLeaveAlert: false,
+          submiting: false
         })
       })
   }
@@ -139,9 +153,13 @@ class HackathonPage extends Component {
       user: user.data(),
       isReady: true
     })
-    const addJudgesPromises = this.state.hackathon.judges.map(this.addJudgeToState)
 
-    await Promise.all(addJudgesPromises)
+    if(snapshot.data().judges.length != 0){
+      const addJudgesPromises = this.state.hackathon.judges.map(this.addJudgeToState)
+
+      await Promise.all(addJudgesPromises)
+    }
+
     this.setState({
       isJudgesReady: true
     })
@@ -152,7 +170,7 @@ class HackathonPage extends Component {
       this.unsubscribe()
   }
   render() {
-    const { hackathon, isReady, judges, isJudgesReady, isRegistered, isUserJudge, isUserManager } = this.state
+    const { hackathon, isReady, judges, isJudgesReady, isRegistered, isUserJudge, isUserManager, showRegisterAlert, showLeaveAlert, submiting } = this.state
     this.props.navigation.setOptions({
       title: this.props.route.params.name,
       headerTitleAlign: 'center'
@@ -164,7 +182,7 @@ class HackathonPage extends Component {
     }
     return (
       <View style={{ flex: 1, alignItems: 'stretch'}}>
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: 20}}>
             {(hackathon.banner !== '' && hackathon.banner != null) &&
               <Image style={{width:340 ,height:100}} source={{uri: hackathon.banner}} />
             }
@@ -180,29 +198,32 @@ class HackathonPage extends Component {
               <Text style={styles.judgeMsg}>You are a judge in this hackathon</Text>
 
             : isRegistered ?
-                <Button style={styles.registerBtn} onPress={this.leaveHackathon}>
+                <Button style={styles.registerBtn} onPress={() => this.setState({showLeaveAlert: true})}>
                   <Text style={styles.btnText}>Leave This Hackathon</Text>
                 </Button>
-              : <Button style={styles.registerBtn} onPress={this.registerForHackathon}>
+              : <Button style={styles.registerBtn} onPress={() => this.setState({showRegisterAlert: true})}>
                   <Text style={styles.btnText}>Register for this hackathon</Text>
                 </Button>
             }
             <Text style={styles.locationLink}><Entypo size={16} name="location-pin" />{hackathon.locationAddress}</Text>
             <Text style={styles.title}>{hackathon.name}</Text>
             <Text style={styles.description}>{hackathon.description}</Text>
-            <Text style={styles.h2}>Prizes</Text>
+            {(hackathon.prizes != null && Object.values(hackathon.prizes).length != 0) &&
+              <Text style={styles.h2}>Prizes</Text>}
             {
               Object.values(hackathon.prizes).map((prize) => (
                 <View key={prize.position} style={styles.headersContainer}>
                   {prize.type == 'cash' ?
-                    <Text style={styles.h3}>{prize.position}. {prize.value+" "+hackathon.currency}</Text>
+                    <Text style={styles.h3}>{prize.position}. {prize.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+" "+hackathon.currency}</Text>
                   : <Text style={styles.h3}>{prize.position}. {prize.value}</Text>}
                   {prize.description !== '' &&
                     <Text style={styles.smallDescription}>{prize.description}</Text>}
                 </View>
               ))
             }
-            <Text style={styles.h2}>Judges</Text>
+            {judges.length != 0 &&
+              <Text style={styles.h2}>Judges</Text>
+            }
             {isJudgesReady ?
               judges.map((judge) => (
                 <View key={judge.uid} style={styles.judgeConatiner}>
@@ -225,19 +246,111 @@ class HackathonPage extends Component {
                 </View>
               ))}
             <View>
-              <Text style={styles.h2}>Rules</Text>
+              {hackathon.rules.length != 0 &&
+                <Text style={styles.h2}>Rules</Text>}
               {hackathon.rules.map((rule) => (
-                <Text key={rule} style={styles.point}><Entypo size={16} name="dot-single" />{rule}</Text>
-              ))
-
-              }
+                  <Text key={rule} style={styles.point}><Entypo size={16} name="dot-single" />{rule}</Text>
+                ))}
             </View>
+            {(hackathon.sponsors != null && hackathon.sponsors.length != 0) &&
+              <View style={styles.sponsors}>
+                {hackathon.sponsors.map((sponsor) => (
+                  <View>
+                    <Text style={[styles.h2, {textAlign: 'center'}]}>{sponsor.type}</Text>
+                    {sponsor.logos.map(logo => <Image resizeMode={'center'} style={{ width: '100%', height: 100, margin: 10 }} source={{uri: logo}} />)}
+                  </View>
+                ))}
+              </View>
+            }
         </ScrollView>
+        <RegisterAlert
+        submiting={submiting}
+        showAlert={showRegisterAlert}
+        minInTeam={hackathon.minInTeam}
+        register={this.registerForHackathon}
+        hideAlert={() => this.setState({showRegisterAlert: false})}
+        />
+        <LeaveAlert
+        submiting={submiting}
+        showAlert={showLeaveAlert}
+        leave={this.leaveHackathon}
+        hideAlert={() => this.setState({showLeaveAlert: false})}
+        />
       </View>
     )
   }
 }
 
+function RegisterAlert({showAlert, hideAlert, register, minInTeam, submiting}) {
+  let teamsNote = ""
+  if(minInTeam == 1)
+    teamsNote = "Note that this hackathon allow single-person teams to participate in."
+  else
+    teamsNote = "Note that minimum members in a team for this hackathon is "+minInTeam+". Teams have members less than "+minInTeam+" will be eleminated as well."
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        showProgress={submiting}
+        progressSize="large"
+        progressColor="#BB86FC"
+        title="Confirm Registeration"
+        message={"Registering in this hackathon doesn't consider you as a participant yet."+
+        "\nWhen the hackathon starts, all participants who don't have a team will be eliminated."+
+        "\nSo, you need to create or join a team once you're registered. "+teamsNote+
+        "\n\n Happy Hacking!"}
+        showCancelButton={!submiting}
+        showConfirmButton={!submiting}
+        cancelText="Close"
+        confirmText="Agree, proceed"
+        confirmButtonColor="#BB86FC"
+        cancelButtonColor="#383838"
+        onCancelPressed={() => {
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          register()
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
+}
+function LeaveAlert({showAlert, hideAlert, leave, submiting}){
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        showProgress={submiting}
+        progressSize="large"
+        progressColor="#BB86FC"
+        title="Leave Hackathon"
+        message={"By clicking leave, You will be removed from this hackathon. If you have a team and you're the leader , leadership will be assigned to one the remaining members."+
+        "\nIf you don't have members in your team, then your team will be removed."+
+        "\n\nAre you sure you want to leave?"}
+        showCancelButton={!submiting}
+        showConfirmButton={!submiting}
+        cancelText="Close"
+        confirmText="Leave"
+        confirmButtonColor="#BB86FC"
+        cancelButtonColor="#383838"
+        onCancelPressed={() => {
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          leave()
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -324,7 +437,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: '#BB86FC',
     opacity: 0.8
-  }
+  },
+  sponsors: {
+    marginTop: 20
+  },
 })
 
 export default withFirebaseHOC(HackathonPage)
