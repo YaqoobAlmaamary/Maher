@@ -255,9 +255,9 @@ class HackathonPage extends Component {
             {(hackathon.sponsors != null && hackathon.sponsors.length != 0) &&
               <View style={styles.sponsors}>
                 {hackathon.sponsors.map((sponsor) => (
-                  <View>
+                  <View key={sponsor.type}>
                     <Text style={[styles.h2, {textAlign: 'center'}]}>{sponsor.type}</Text>
-                    {sponsor.logos.map(logo => <Image resizeMode={'center'} style={{ width: '100%', height: 100, margin: 10 }} source={{uri: logo}} />)}
+                    {sponsor.logos.map(logo => <Image key={logo} resizeMode={'center'} style={{ width: '100%', height: 100, margin: 10 }} source={{uri: logo}} />)}
                   </View>
                 ))}
               </View>
