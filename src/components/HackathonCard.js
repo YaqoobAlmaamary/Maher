@@ -5,7 +5,14 @@ import { MaterialCommunityIcons, FontAwesome, Ionicons, Entypo } from '@expo/vec
 import {getDuration} from '../../utils/helper'
 
 function HackathonCard({hackathon, goToHackathon}) {
-  const totalPrizes = hackathon.totalPrizes.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") // put commas
+  let prizes
+  if(hackathon.totalPrizes == 'non-cash'){
+    prizes = "Non-cash prizes"
+  }
+  else {
+    const amount = hackathon.totalPrizes.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") // put commas
+    prizes = amount+hackathon.currency+" in prizes"
+  }
   return (
     <TouchableOpacity onPress={() => goToHackathon() } style={styles.container}>
       <View style={styles.card}>
@@ -21,7 +28,7 @@ function HackathonCard({hackathon, goToHackathon}) {
         <View style={[styles.row, { margin : 5}]}>
           <View style={{flex: 1,justifyContent: 'flex-end'}}>
             <Text style={styles.info}><MaterialCommunityIcons size={16} name="clock-outline" /> {getDuration(hackathon.startDateTime.seconds,hackathon.endDateTime.seconds)}</Text>
-            <Text style={styles.info}><FontAwesome size={16} name="trophy" /> {totalPrizes+hackathon.currency} in prizes</Text>
+            <Text style={styles.info}><FontAwesome size={16} name="trophy" /> {prizes}</Text>
             <Text style={styles.info}><Ionicons size={16} name="md-people" /> {hackathon.participants.length} participants</Text>
           </View>
           <View style={{justifyContent: 'flex-end'}}>
