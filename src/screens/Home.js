@@ -156,7 +156,7 @@ class Home extends Component {
     else if(this.getSections().length == 0){
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', margin: 50 }}>
-          <Text style={styles.noHackathonMsg}>You aren't participated in any hackathon</Text>
+          <Text style={styles.noHackathonMsg}>You don't have any upcoming hackathons</Text>
         </View>
       )
     }
