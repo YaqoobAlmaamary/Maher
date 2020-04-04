@@ -77,11 +77,31 @@ const Firebase = {
       .doc(hackathonId)
   },
 
-  getTeamDoc: (teamId) => {
+  getTeamDoc: (hackathonId, teamId) => {
     return firebase
       .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
       .collection('teams')
       .doc(teamId)
+  },
+
+  createNewTeam: async (hackathonId, teamData, uid) => {
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .collection('teams')
+      .doc(teamData.teamId)
+      .set(teamData)
+
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .update({
+        teams: firebase.firestore.FieldValue.arrayUnion({teamId: teamData.teamId, members: [uid]})
+      })
   },
 
   // real-time database
