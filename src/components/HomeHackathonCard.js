@@ -8,7 +8,8 @@ import { withFirebaseHOC } from '../../config/Firebase'
 class HomeHackathonCard extends Component {
   state = {
     type: "",
-    inTeam: false
+    inTeam: false,
+    teamId: ''
   }
   getStatus = () => {
     const { type } = this.state
@@ -32,11 +33,14 @@ class HomeHackathonCard extends Component {
       if(hackathon.teams.length == 0)
         inTeam = false
       else
-        inTeam = hackathon.teams.filter((team) => team.members.includes(uid)).length != 0
+        inTeam = hackathon.teams.find((team) => team.members.includes(uid))
 
-      if(inTeam){
+      if(inTeam != null && inTeam != false){
         if(this.state.inTeam == false)
-          this.setState({inTeam: true})
+          this.setState({
+            inTeam: true,
+            teamId: inTeam.teamId
+          })
 
         return {type: 'good', text: "in a team"}
       }
@@ -67,8 +71,8 @@ class HomeHackathonCard extends Component {
     })
   }
   render() {
-    const {hackathon, goToHackathon} = this.props
-    const { inTeam, type } = this.state
+    const {navigation, hackathon, goToHackathon} = this.props
+    const { inTeam, type, teamId } = this.state
     const status = this.getStatus()
     return (
       <TouchableOpacity onPress={() => goToHackathon() } style={styles.container}>
@@ -92,8 +96,8 @@ class HomeHackathonCard extends Component {
             {type == 'participant' &&
               <View style={{justifyContent: 'flex-end'}}>
                   {inTeam ?
-                    <MyButton text="My Team" onPress={() => console.log("take me to team page")} />
-                  : <MyButton text="Create Team" onPress={() => console.log("take me to create team page")} />}
+                    <MyButton text="My Team" onPress={() => navigation.navigate("Team Page", {teamId: teamId, hackathonId: hackathon.hackathonId} ) } />
+                  : <MyButton text="Create Team" onPress={() => navigation.navigate("Create Team", {hackathonId: hackathon.hackathonId} ) } />}
               </View>
             }
           </View>
