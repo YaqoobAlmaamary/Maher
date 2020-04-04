@@ -67,11 +67,11 @@ class HackathonPage extends Component {
       let updatedHackathonTeams
       let updatedTeam
 
-      const teamData = await firebase.getTeamDoc(userTeam.teamId).get()
+      const teamData = await firebase.getTeamDoc(hackathon.hackathonId, userTeam.teamId).get()
 
       if(userTeam.members.length == 1){
         updatedHackathonTeams = hackathon.teams.filter(team => team.teamId != userTeam.teamId)
-        await firebase.getTeamDoc(userTeam.teamId).delete()
+        await firebase.getTeamDoc(hackathon.hackathonId, userTeam.teamId).delete()
       }
       else {
         updatedTeam = teamData.data().members.filter(member => member.uid != firebase.getCurrentUser().uid)
@@ -88,7 +88,7 @@ class HackathonPage extends Component {
 
       await firebase.getHackathonDoc(hackathon.hackathonId).update({teams: updatedHackathonTeams})
       if(userTeam.members.length > 1)
-        await firebase.getTeamDoc(userTeam.teamId).update({members: updatedTeam})
+        await firebase.getTeamDoc(hackathon.hackathonId, userTeam.teamId).update({members: updatedTeam})
     }
     await firebase.getHackathonDoc(hackathon.hackathonId).update(updatedParticipants)
 
