@@ -5,7 +5,9 @@ import { withFirebaseHOC } from '../../config/Firebase'
 import { FlatList } from 'react-native'
 import HomeHackathonCard from '../components/HomeHackathonCard'
 import HackathonPage from '../screens/HackathonPage'
-import { createStackNavigator } from '@react-navigation/stack'
+import CreateTeam from '../screens/CreateTeam'
+import TeamPage from '../screens/TeamPage'
+import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
 
 const Stack = createStackNavigator()
 
@@ -167,6 +169,7 @@ class Home extends Component {
           renderItem={
             ( {item} ) => (
               <HomeHackathonCard
+              navigation={this.props.navigation}
               hackathon={item}
               goToHackathon={() => this.props.navigation.navigate("Hackathon Page", {hackathonId: item.hackathonId, name: item.name})}
               />)
@@ -218,6 +221,8 @@ function HomeStack(props) {
     <Stack.Navigator>
       <Stack.Screen name="Home" component={ HomeWithFirebase } options={ { headerTitle: () => logo, headerTitleAlign: "center" } } />
       <Stack.Screen name="Hackathon Page" component={ HackathonPage } />
+      <Stack.Screen name="Create Team" component={ CreateTeam } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
+      <Stack.Screen name="Team Page" component={ TeamPage } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
     </Stack.Navigator>
   );
 }
