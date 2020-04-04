@@ -1,41 +1,16 @@
-import React from 'react'
+import React, {useState} from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Item as FormItem, Label, Input, Text } from 'native-base'
+import { Item as FormItem, Label, Input, Text, Textarea } from 'native-base'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
-export function NameInput({autoFocus, onFirstNameChange, onLastNameChange, values, returnKeyType, onSubmitEditing, blurOnSubmitLast}) {
-  return (
-    <View style={styles.nameInput}>
-      <FormItem floatingLabel style={[styles.formItem, { flex: 1, marginRight: 7.5}]}>
-        <Label style={styles.label}>First name</Label>
-        <Input placeholder="first name"
-        style={styles.textInput}
-        value={values.firstName}
-        autoFocus={autoFocus}
-        returnKeyType = { "next" }
-        blurOnSubmit={ false }
-        onSubmitEditing={() => { lastNameInput._root.focus() }} //to move to lastname input using keyboard
-        onChangeText={onFirstNameChange}/>
-      </FormItem>
-      <FormItem floatingLabel style={[styles.formItem, {flex: 1, marginLeft: 7.5}]}>
-        <Label style={styles.label}>Last name</Label>
-        <Input placeholder="last name"
-        style={styles.textInput}
-        value={values.lastName}
-        getRef={input => { lastNameInput = input }} // make ref to this input to be used on sumbiting firstname
-        onChangeText={onLastNameChange}
-        returnKeyType={returnKeyType}
-        blurOnSubmit={ blurOnSubmitLast }
-        onSubmitEditing={onSubmitEditing} />
-      </FormItem>
-    </View>
-  )
-}
 export function TextInputWithMsg({autoFocus, value, label, placeholder, onChangeText, error, success, onSubmitEditing, returnKeyType, blurOnSubmit}){
+  const [isFocused, setIsFocused] = useState(false)
   return (
     <View>
       <FormItem floatingLabel
         style={[styles.formItem,
+          (isFocused) &&
+            {borderColor: '#BB86FC',},
           (error != null && error !== '') &&
             {borderColor: '#CF6679',},
           (success != null && success !== '') &&
@@ -49,11 +24,25 @@ export function TextInputWithMsg({autoFocus, value, label, placeholder, onChange
         blurOnSubmit={blurOnSubmit}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}
-        returnKeyType={returnKeyType} />
+        returnKeyType={returnKeyType}
+        onBlur={() => setIsFocused(false)}
+        onFocus={() => setIsFocused(true)} />
       </FormItem>
       {(error != null && error !== '') && <Text style={{marginLeft:20, color: '#CF6679'}}>{error}</Text>}
       {(success != null && success !== '') && <Text style={{marginLeft:20, color: '#01A299'}}><MaterialCommunityIcons name="check" size={18} /> {success}</Text>}
     </View>
+  )
+}
+
+export function TextArea({rowSpan, placeholder}) {
+  const [isFocused, setIsFocused] = useState(false)
+  return (
+    <Textarea
+      style={[styles.textArea, (isFocused) && {borderColor: '#BB86FC',}]}
+      rowSpan={rowSpan}
+      placeholder={placeholder}
+      onBlur={() => setIsFocused(false)}
+      onFocus={() => setIsFocused(true)} />
   )
 }
 
@@ -64,6 +53,7 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
     margin: 15,
     marginBottom: 0,
+    marginTop: 0,
     borderRadius: 4,
     height: 60,
   },
@@ -74,8 +64,13 @@ const styles = StyleSheet.create({
   label: {
     paddingLeft: 10,
   },
-  nameInput: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
+  textArea:{
+    backgroundColor: '#2f2f2f',
+    borderBottomWidth: 1,
+    padding: 10,
+    margin: 15,
+    marginBottom: 0,
+    marginTop: 0,
+    borderRadius: 4,
+  }
 })
