@@ -8,6 +8,7 @@ import HackathonPage from '../screens/HackathonPage'
 import CreateTeam from '../screens/CreateTeam'
 import TeamPage from '../screens/TeamPage'
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
+import CreateHackathon from "../screens/CreateHackathon"
 
 const Stack = createStackNavigator()
 
@@ -164,6 +165,7 @@ class Home extends Component {
     }
     return (
       <View style={ { flex:1, } }>
+        {/*This will display the list of hackathons*/}
         <SectionList
           sections={this.getSections()}
           renderItem={
@@ -179,28 +181,13 @@ class Home extends Component {
           }
           keyExtractor={ (item) => item.hackathonId }
         />
+        {/*This will display the button to create a hackathon */}
+          <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate("Create Hackathon") }>
+            <Text>+</Text>
+          </TouchableOpacity>
       </View>
 
     );
-  }
-
-  render_old() {
-    // will return a list of all hackathons
-    // sorted from closest to furthest
-    return (
-      <View style={ { flex: 1, marginTop: 40, } }>
-        <FlatList
-          data={ this.state.hackathons }
-          renderItem={
-            ( {item} ) => (
-              <HackathonCard
-              hackathon={item}
-              goToHackathon={() => this.props.navigation.navigate("Hackathon Page", {hackathonId: item.hackathonId, name: item.name})}
-              />)
-          }
-          keyExtractor={(item) => item.hackathonId}
-        /></View>
-    )
   }
 }
 const HomeWithFirebase = withFirebaseHOC( Home ) // to have firebase as prop
@@ -223,6 +210,7 @@ function HomeStack(props) {
       <Stack.Screen name="Hackathon Page" component={ HackathonPage } />
       <Stack.Screen name="Create Team" component={ CreateTeam } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
       <Stack.Screen name="Team Page" component={ TeamPage } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
+      <Stack.Screen name="Create Hackathon" component={ CreateHackathon } />
     </Stack.Navigator>
   );
 }
@@ -240,7 +228,18 @@ const styles = StyleSheet.create( {
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center'
-  }
+  },
+  button: {
+    backgroundColor: "#BB86FC",
+    borderRadius: 150,
+    padding: 25,
+    width: 72,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    marginLeft: 295,
+    marginTop: 550,
+  },
 } );
 
 export default HomeStack;
