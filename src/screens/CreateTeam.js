@@ -55,7 +55,7 @@ class CreateTeam extends Component {
     return (
         <ScrollView>
           <Form>
-            <H3 style={styles.label}>Team Name</H3>
+            <H3 style={styles.label}>Team Name*</H3>
             <TextInputWithMsg
               label="Team Name"
               value={name}
