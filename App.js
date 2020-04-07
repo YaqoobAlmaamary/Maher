@@ -50,7 +50,7 @@ const MyTheme = {
 
 class TabNavigator extends Component {
   state = {
-    notifications: null
+    notifications: []
   }
   componentDidMount() {
     if(Firebase.getCurrentUser() != null) {
@@ -62,7 +62,7 @@ class TabNavigator extends Component {
             })
           else
             this.setState({
-              notifications: null
+              notifications: []
             })
         })
     }
@@ -84,7 +84,7 @@ class TabNavigator extends Component {
 
                 } else if (route.name === 'Notifications') {
 
-                  return <BillWithBadge size={35} color={color} badgeCount={notifications != null ? notifications.length : 0} />
+                  return <BillWithBadge size={35} color={color} badgeCount={route.params.notifications.length} />
                 } else if (route.name === 'Search') {
 
                   return <MaterialIcons name='search' size={35} color={color} />
@@ -103,7 +103,7 @@ class TabNavigator extends Component {
               showLabel: false,
             }}>
           <Tab.Screen name="Home" component={Home} />
-          <Tab.Screen name="Notifications" component={Notifications} />
+          <Tab.Screen name="Notifications" initialParams={{notifications}} component={Notifications} />
           <Tab.Screen name="Search" component={Search} />
           <Tab.Screen name="Profile" component={Profile} />
       </Tab.Navigator>
