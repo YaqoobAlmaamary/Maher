@@ -57,9 +57,15 @@ class InviteToTeam extends Component {
     })
     const newNotificationId = this.props.firebase.database().ref('notifications/'+uid).push().key
 
+    const photoURL = this.props.firebase.getCurrentUser().photoURL
+
     const notificationData = {
       type: 'team',
       from: this.props.firebase.getCurrentUser().uid,
+      fromFullName: this.props.firebase.getCurrentUser().displayName,
+      fromPhotoUri: photoURL == null ? '' : photoURL,
+      hackathonName: this.state.hackathon.name,
+      teamName: this.state.team.name,
       to: uid,
       teamId: this.state.team.teamId,
       hackathonId: this.state.hackathon.hackathonId,
