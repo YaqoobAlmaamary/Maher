@@ -134,8 +134,12 @@ class EditProfile extends Component {
     }
     const { uid } = firebase.getCurrentUser()
 
+    let photoURL = ''
     firebase.updateUser(uid, updatedData)
     .then(() => {
+        firebase.getCurrentUser().updateProfile({
+        displayName: this.state.firstName + " " + this.state.lastName,
+      })
       firebase.database().ref('usernames/'+uid).set(this.state.username)
       .then(() => {
         if(newPhotoUri !== ''){
@@ -145,6 +149,9 @@ class EditProfile extends Component {
                 .then((newPhotoRef) => {
                   newPhotoRef.getDownloadURL()
                     .then((url) => {
+                        firebase.getCurrentUser().updateProfile({
+                        photoURL: url
+                      })
                       firebase.updateUser(uid, {photoUri: url})
                         .then(() => this.props.navigation.goBack())
                     })
@@ -154,6 +161,9 @@ class EditProfile extends Component {
             .catch(console.log)
         }
         else if(photoUri == '') { // if user removed his photo
+          firebase.getCurrentUser().updateProfile({
+            photoURL: ''
+          })
           firebase.updateUser(uid, {photoUri: ''})
             .then(() => this.props.navigation.goBack())
         }
