@@ -77,8 +77,8 @@ class HackathonPage extends Component {
         updatedTeam = teamData.data().members.filter(member => member.uid != firebase.getCurrentUser().uid)
         const userPosition = teamData.data().members.find(member => member.uid == firebase.getCurrentUser().uid)
         if(userPosition.type == 'leader'){
-          someMember = updatedTeam.shift()
-          updatedTeam = updatedTeam.unShift({uid: someMember.uid, type: "leader"})
+          const someMember = updatedTeam.shift()
+          updatedTeam = updatedTeam.concat({uid: someMember.uid, type: "leader"})
         }
 
         updatedHackathonTeams =
