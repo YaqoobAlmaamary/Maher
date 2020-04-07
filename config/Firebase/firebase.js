@@ -104,6 +104,69 @@ const Firebase = {
       })
   },
 
+  addUserToTeam: async (uid, hackathonId, teamId) => {
+    const hackathonDoc =
+      await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .get()
+
+    const teams = hackathonDoc.data().teams
+
+    const updatedTeams = teams.map(team => {
+      if(team.teamId == teamId)
+        return {...team, members: team.members.concat(uid)}
+      return team
+    })
+
+    // update teams array in hackathon doc
+    await firebase.firestore().collection('hackathons').doc(hackathonId).update({teams: updatedTeams})
+    // update team doc
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .collection('teams')
+      .doc(teamId)
+      .update({
+        members : firebase.firestore.FieldValue.arrayUnion({type: 'participant', uid: uid})
+      })
+  },
+
+  removeUserFromTeam: async (uid, hackathonId, teamId, isLeader = false, newTeamMembersArray = null) => {
+    const hackathonDoc =
+      await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .get()
+
+    const teams = hackathonDoc.data().teams
+
+    const updatedTeams = teams.map(team => {
+      if(team.teamId == teamId)
+        return {...team, members: team.members.filter( memberId => memberId != uid)}
+      return team
+    })
+
+    // update teams array in hackathon doc
+    await firebase.firestore().collection('hackathons').doc(hackathonId).update({teams: updatedTeams})
+    // update team doc
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .collection('teams')
+      .doc(teamId)
+      .update({
+        members :
+          isLeader ?
+              newTeamMembersArray
+            : firebase.firestore.FieldValue.arrayRemove({type: 'participant', uid: uid})
+      })
+  },
+
   // real-time database
   database: () => {
     return firebase.database()
