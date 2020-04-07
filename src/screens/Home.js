@@ -3,10 +3,12 @@ import { View, TouchableOpacity, Image, SectionList, StyleSheet, ActivityIndicat
 import { Text } from 'native-base'
 import { withFirebaseHOC } from '../../config/Firebase'
 import { FlatList } from 'react-native'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import HomeHackathonCard from '../components/HomeHackathonCard'
 import HackathonPage from '../screens/HackathonPage'
 import CreateTeam from '../screens/CreateTeam'
 import TeamPage from '../screens/TeamPage'
+import InviteToTeam from '../screens/InviteToTeam'
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
 import CreateHackathon from "../screens/CreateHackathon"
 
@@ -183,7 +185,7 @@ class Home extends Component {
         />
         {/*This will display the button to create a hackathon */}
           <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate("Create Hackathon") }>
-            <Text>+</Text>
+            <MaterialCommunityIcons size={27} name="plus" />
           </TouchableOpacity>
       </View>
 
@@ -210,6 +212,7 @@ function HomeStack(props) {
       <Stack.Screen name="Hackathon Page" component={ HackathonPage } />
       <Stack.Screen name="Create Team" component={ CreateTeam } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
       <Stack.Screen name="Team Page" component={ TeamPage } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
+      <Stack.Screen name="Invite To Team" component={ InviteToTeam } />
       <Stack.Screen name="Create Hackathon" component={ CreateHackathon } />
     </Stack.Navigator>
   );
@@ -230,15 +233,19 @@ const styles = StyleSheet.create( {
     textAlign: 'center'
   },
   button: {
-    backgroundColor: "#BB86FC",
-    borderRadius: 150,
-    padding: 25,
-    width: 72,
+    backgroundColor: '#03dac5',
+    borderRadius: 40,
+    padding: 20,
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
-    marginLeft: 295,
-    marginTop: 550,
+    right: 10,
+    bottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 5
   },
 } );
 
