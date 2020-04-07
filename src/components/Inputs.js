@@ -34,11 +34,13 @@ export function TextInputWithMsg({autoFocus, value, label, placeholder, onChange
   )
 }
 
-export function TextArea({rowSpan, placeholder}) {
+export function TextArea({rowSpan, placeholder, value, onChangeText}) {
   const [isFocused, setIsFocused] = useState(false)
   return (
     <Textarea
       style={[styles.textArea, (isFocused) && {borderColor: '#BB86FC',}]}
+      value={value}
+      onChangeText={(s) =>  onChangeText(s)}
       rowSpan={rowSpan}
       placeholder={placeholder}
       onBlur={() => setIsFocused(false)}
