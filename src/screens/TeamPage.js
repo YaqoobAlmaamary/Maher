@@ -4,6 +4,7 @@ import { Text, H3 } from 'native-base'
 import { MaterialCommunityIcons, Entypo } from '@expo/vector-icons'
 import { withFirebaseHOC } from '../../config/Firebase'
 import TextButton from '../components/TextButton'
+import AwesomeAlert from 'react-native-awesome-alerts'
 
 class TeamPage extends Component {
   state = {
@@ -14,7 +15,11 @@ class TeamPage extends Component {
     hackathon: {},
     members: [],
     leaderId: '',
+    memberToRemove: null,
     isReady: false,
+    submiting: false,
+    showLeaveAlert: false,
+    showRemoveMemberAlert: false
   }
 
   findLeader = (members) => {
@@ -53,6 +58,45 @@ class TeamPage extends Component {
       }
     }
   }
+  removeMember = async (memberId) => {
+    this.setState({
+      submiting: true
+    })
+    const { hackathonId } = this.state.hackathon
+    const { teamId } = this.state.team
+    await this.props.firebase.removeUserFromTeam(memberId, hackathonId, teamId)
+    this.setState({
+      submiting: false
+    },() => {
+      this.setState({
+        showRemoveMemberAlert: false,
+      })
+    })
+  }
+  leaveTeam = async () => {
+    this.setState({
+      submiting: true
+    })
+    const { uid } = this.props.firebase.getCurrentUser()
+    const { hackathonId } = this.state.hackathon
+    const { team } = this.state
+
+    const membersWithoutCurrUser = team.members.filter((member) => member.uid != uid)
+
+    if(this.state.leaderId == uid){
+      const newLeaderUid = membersWithoutCurrUser.shift().uid
+      const newTeamMembersArray = membersWithoutCurrUser.concat({type: 'leader', uid: newLeaderUid})
+      await this.props.firebase.removeUserFromTeam(uid, hackathonId, team.teamId, true, newTeamMembersArray)
+    }
+    else{
+      await this.removeMember(uid)
+    }
+    this.setState({
+      submiting: true
+    })
+    this.props.navigation.replace("Home")
+
+  }
   async componentDidMount(){
     const { teamId, hackathonId } = this.props.route.params
     this.unsubscribe = this.props.firebase.getTeamDoc(hackathonId, teamId)
@@ -75,7 +119,7 @@ class TeamPage extends Component {
       this.unsubscribe()
   }
   render() {
-    const { team, hackathon, isReady, members, leaderId } = this.state
+    const { team, hackathon, isReady, members, leaderId, showLeaveAlert, showRemoveMemberAlert, submiting } = this.state
     const { uid } = this.props.firebase.getCurrentUser()
     const status = this.getTeamStatus()
     this.props.navigation.setOptions({
@@ -88,7 +132,7 @@ class TeamPage extends Component {
       )
     }
     return (
-      <View style={{marginTop: 10}}>
+      <View style={{flex: 1,marginTop: 10}}>
         <View style={styles.row}>
           <Text style={styles.header}>Team Name: </Text>
           <Text style={{fontSize: 18}}>{team.name}</Text>
@@ -119,7 +163,10 @@ class TeamPage extends Component {
                   </View>
                   {(member.uid != uid && leaderId == uid) &&
                     <View style={{flex: 1, justifyContent: 'center', alignItems: 'flex-end', marginRight: 20}}>
-                      <TouchableOpacity>
+                      <TouchableOpacity onPress={() => this.setState({
+                        memberToRemove: member,
+                        showRemoveMemberAlert: true
+                      })}>
                         <Text style={{color: '#CF6679'}}>
                           <Entypo size={35} name="cross" />
                         </Text>
@@ -136,15 +183,99 @@ class TeamPage extends Component {
             onPress={() => this.props.navigation.navigate("Invite To Team", {hackathonId: hackathon.hackathonId, teamId: team.teamId, leaderId: leaderId})}
             style={{alignSelf: 'flex-end', margin: 10, opacity: members.length == hackathon.maxInTeam ? 0.5 : 1}}
             disabled={members.length == hackathon.maxInTeam}>
-            <Text style={styles.addBtn}>
+            <Text style={styles.btn}>
               <MaterialCommunityIcons size={23} name="plus" />
                 Invite members
             </Text>
           </TouchableOpacity>
         }
+        <TouchableOpacity
+          onPress={() => this.setState({showLeaveAlert: true})}
+          style={{alignSelf: 'flex-start', margin: 20, opacity: members.length == 1 ? 0.5 : 1}}
+          disabled={members.length == 1}>
+          <Text style={[styles.btn, {color: '#CF6679'}]}>
+            Leave Team
+          </Text>
+        </TouchableOpacity>
+        <LeaveAlert
+          showAlert={showLeaveAlert}
+          hideAlert={() => this.setState({showLeaveAlert: false})}
+          leaveTeam={this.leaveTeam}
+          submiting={submiting}
+        />
+        <RemoveMemberAlert
+          member={this.state.memberToRemove}
+          showAlert={showRemoveMemberAlert}
+          hideAlert={() => this.setState({showRemoveMemberAlert: false})}
+          removeMember={this.removeMember}
+          submiting={submiting}
+        />
       </View>
     )
   }
+}
+
+function LeaveAlert({showAlert, hideAlert, leaveTeam, submiting}){
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        showProgress={submiting}
+        progressSize="large"
+        progressColor="#BB86FC"
+        message={"Are you sure you want to leave the team?"}
+        showCancelButton={!submiting}
+        showConfirmButton={!submiting}
+        cancelText="Close"
+        confirmText="Leave"
+        confirmButtonColor="#BB86FC"
+        cancelButtonColor="#383838"
+        onCancelPressed={() => {
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          leaveTeam()
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
+}
+
+function RemoveMemberAlert({member, showAlert, hideAlert, removeMember, submiting}){
+  if(member == null)
+    return null
+
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        showProgress={submiting}
+        progressSize="large"
+        progressColor="#BB86FC"
+        message={`Are you sure you want to remove ${member.username} from the team?`}
+        showCancelButton={!submiting}
+        showConfirmButton={!submiting}
+        cancelText="Close"
+        confirmText="Remove"
+        confirmButtonColor="#BB86FC"
+        cancelButtonColor="#383838"
+        onCancelPressed={() => {
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          removeMember(member.uid)
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
 }
 
 const styles = StyleSheet.create({
@@ -180,7 +311,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 18,
   },
-  addBtn: {
+  btn: {
     color: '#BB86FC',
     fontSize: 17,
     textTransform: 'uppercase',
