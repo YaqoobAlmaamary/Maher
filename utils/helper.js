@@ -22,10 +22,10 @@ export const getDuration = (startInSeconds, endInSeconds) => {
       return moment(start).format("ll")+"-"+moment(end).format("ll")
     }
     else if(moment(start).format("MM") !== moment(end).format("MM")){
-      return moment(start).format("ll").split(",").join("-"+moment(end).format("ll").slice(0,7))
+      return moment(start).format("ll").split(",").join("-"+moment(end).format("MMM")+" "+moment(end).format("D")+",")
     }
     else if(moment(start).format("DD") !== moment(end).format("DD")){
-      return moment(start).format("ll").split(",").join("-"+moment(end).format("D"))
+      return moment(start).format("ll").split(",").join("-"+moment(end).format("D")+",")
     }
     else {
       return moment(start).format("ll")

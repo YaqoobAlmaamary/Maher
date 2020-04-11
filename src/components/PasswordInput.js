@@ -5,7 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 export default class PasswordInput extends Component {
   state= {
-    showPassword: false
+    showPassword: false,
+    isFocused: false
   }
 
   toggle = () => {
@@ -15,12 +16,17 @@ export default class PasswordInput extends Component {
   }
 
   render () {
-    const { showPassword } = this.state
+    const { showPassword, isFocused } = this.state
     const { value, error } = this.props
 
     return (
       <View style={styles.container}>
-        <FormItem floatingLabel style={[styles.formItem, (error != null && error !== '') && {borderColor: '#CF6679',}]}>
+        <FormItem floatingLabel
+          style={[styles.formItem,
+            (isFocused) &&
+              {borderColor: '#BB86FC',},
+            (error != null && error !== '') &&
+             {borderColor: '#CF6679',}]}>
           <Label style={styles.label}>Password</Label>
           <Input
           value={value}
@@ -34,7 +40,9 @@ export default class PasswordInput extends Component {
           returnKeyType={this.props.returnKeyType}
           onSubmitEditing={this.props.onSubmitEditing}
           autoFocus={this.props.autoFocus == true ? true : false }
-          onChangeText={(password) => this.props.handlePasswordChange(password)} />
+          onChangeText={(password) => this.props.handlePasswordChange(password)}
+          onFocus={() => this.setState({isFocused: true})}
+          onBlur={() => this.setState({isFocused: false})} />
         </FormItem>
         {Platform.OS == 'android' &&
             <View style={styles.buttonContainer}>

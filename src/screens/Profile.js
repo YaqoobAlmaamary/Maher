@@ -22,6 +22,7 @@ class ProfileInfo extends Component {
       username: '',
       firstName: '',
       lastName: '',
+      hackathons: []
     },
     showAlert: false
 
@@ -44,7 +45,7 @@ class ProfileInfo extends Component {
   }
   render() {
     const { user } = this.state
-    const totalHackathons = 0 //todo: calculate total Hackathons that user has participated in
+    const totalHackathons = user.hackathons ? user.hackathons.length : 0
     this.props.navigation.setOptions({
       headerTitleAlign: 'center',
       title: user.username,

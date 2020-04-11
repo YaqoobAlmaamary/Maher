@@ -3,9 +3,14 @@ import { View, TouchableOpacity, Image, SectionList, StyleSheet, ActivityIndicat
 import { Text } from 'native-base'
 import { withFirebaseHOC } from '../../config/Firebase'
 import { FlatList } from 'react-native'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import HomeHackathonCard from '../components/HomeHackathonCard'
 import HackathonPage from '../screens/HackathonPage'
-import { createStackNavigator } from '@react-navigation/stack'
+import CreateTeam from '../screens/CreateTeam'
+import TeamPage from '../screens/TeamPage'
+import InviteToTeam from '../screens/InviteToTeam'
+import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
+import CreateHackathon from "../screens/CreateHackathon"
 
 const Stack = createStackNavigator()
 
@@ -156,17 +161,19 @@ class Home extends Component {
     else if(this.getSections().length == 0){
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', margin: 50 }}>
-          <Text style={styles.noHackathonMsg}>You aren't participated in any hackathon</Text>
+          <Text style={styles.noHackathonMsg}>You don't have any upcoming hackathons</Text>
         </View>
       )
     }
     return (
       <View style={ { flex:1, } }>
+        {/*This will display the list of hackathons*/}
         <SectionList
           sections={this.getSections()}
           renderItem={
             ( {item} ) => (
               <HomeHackathonCard
+              navigation={this.props.navigation}
               hackathon={item}
               goToHackathon={() => this.props.navigation.navigate("Hackathon Page", {hackathonId: item.hackathonId, name: item.name})}
               />)
@@ -176,28 +183,13 @@ class Home extends Component {
           }
           keyExtractor={ (item) => item.hackathonId }
         />
+        {/*This will display the button to create a hackathon */}
+          <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate("Create Hackathon") }>
+            <MaterialCommunityIcons size={27} name="plus" />
+          </TouchableOpacity>
       </View>
 
     );
-  }
-
-  render_old() {
-    // will return a list of all hackathons
-    // sorted from closest to furthest
-    return (
-      <View style={ { flex: 1, marginTop: 40, } }>
-        <FlatList
-          data={ this.state.hackathons }
-          renderItem={
-            ( {item} ) => (
-              <HackathonCard
-              hackathon={item}
-              goToHackathon={() => this.props.navigation.navigate("Hackathon Page", {hackathonId: item.hackathonId, name: item.name})}
-              />)
-          }
-          keyExtractor={(item) => item.hackathonId}
-        /></View>
-    )
   }
 }
 const HomeWithFirebase = withFirebaseHOC( Home ) // to have firebase as prop
@@ -218,6 +210,10 @@ function HomeStack(props) {
     <Stack.Navigator>
       <Stack.Screen name="Home" component={ HomeWithFirebase } options={ { headerTitle: () => logo, headerTitleAlign: "center" } } />
       <Stack.Screen name="Hackathon Page" component={ HackathonPage } />
+      <Stack.Screen name="Create Team" component={ CreateTeam } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
+      <Stack.Screen name="Team Page" component={ TeamPage } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
+      <Stack.Screen name="Invite To Team" component={ InviteToTeam } />
+      <Stack.Screen name="Create Hackathon" component={ CreateHackathon } />
     </Stack.Navigator>
   );
 }
@@ -235,7 +231,22 @@ const styles = StyleSheet.create( {
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center'
-  }
+  },
+  button: {
+    backgroundColor: '#03dac5',
+    borderRadius: 40,
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    right: 10,
+    bottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 5
+  },
 } );
 
 export default HomeStack;

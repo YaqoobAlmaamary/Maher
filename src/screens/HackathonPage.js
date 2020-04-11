@@ -67,18 +67,18 @@ class HackathonPage extends Component {
       let updatedHackathonTeams
       let updatedTeam
 
-      const teamData = await firebase.getTeamDoc(userTeam.teamId).get()
+      const teamData = await firebase.getTeamDoc(hackathon.hackathonId, userTeam.teamId).get()
 
       if(userTeam.members.length == 1){
         updatedHackathonTeams = hackathon.teams.filter(team => team.teamId != userTeam.teamId)
-        await firebase.getTeamDoc(userTeam.teamId).delete()
+        await firebase.getTeamDoc(hackathon.hackathonId, userTeam.teamId).delete()
       }
       else {
         updatedTeam = teamData.data().members.filter(member => member.uid != firebase.getCurrentUser().uid)
         const userPosition = teamData.data().members.find(member => member.uid == firebase.getCurrentUser().uid)
         if(userPosition.type == 'leader'){
-          someMember = updatedTeam.shift()
-          updatedTeam = updatedTeam.unShift({uid: someMember.uid, type: "leader"})
+          const someMember = updatedTeam.shift()
+          updatedTeam = updatedTeam.concat({uid: someMember.uid, type: "leader"})
         }
 
         updatedHackathonTeams =
@@ -88,7 +88,7 @@ class HackathonPage extends Component {
 
       await firebase.getHackathonDoc(hackathon.hackathonId).update({teams: updatedHackathonTeams})
       if(userTeam.members.length > 1)
-        await firebase.getTeamDoc(userTeam.teamId).update({members: updatedTeam})
+        await firebase.getTeamDoc(hackathon.hackathonId, userTeam.teamId).update({members: updatedTeam})
     }
     await firebase.getHackathonDoc(hackathon.hackathonId).update(updatedParticipants)
 
@@ -198,10 +198,10 @@ class HackathonPage extends Component {
               <Text style={styles.judgeMsg}>You are a judge in this hackathon</Text>
 
             : isRegistered ?
-                <Button style={styles.registerBtn} onPress={() => this.setState({showLeaveAlert: true})}>
+                <Button disabled={hackathon.status != 'open'} style={styles.registerBtn} onPress={() => this.setState({showLeaveAlert: true})}>
                   <Text style={styles.btnText}>Leave This Hackathon</Text>
                 </Button>
-              : <Button style={styles.registerBtn} onPress={() => this.setState({showRegisterAlert: true})}>
+              : <Button disabled={hackathon.status != 'open'} style={styles.registerBtn} onPress={() => this.setState({showRegisterAlert: true})}>
                   <Text style={styles.btnText}>Register for this hackathon</Text>
                 </Button>
             }
@@ -255,9 +255,9 @@ class HackathonPage extends Component {
             {(hackathon.sponsors != null && hackathon.sponsors.length != 0) &&
               <View style={styles.sponsors}>
                 {hackathon.sponsors.map((sponsor) => (
-                  <View>
+                  <View key={sponsor.type}>
                     <Text style={[styles.h2, {textAlign: 'center'}]}>{sponsor.type}</Text>
-                    {sponsor.logos.map(logo => <Image resizeMode={'center'} style={{ width: '100%', height: 100, margin: 10 }} source={{uri: logo}} />)}
+                    {sponsor.logos.map(logo => <Image key={logo} resizeMode={'center'} style={{ width: '100%', height: 100, margin: 10 }} source={{uri: logo}} />)}
                   </View>
                 ))}
               </View>

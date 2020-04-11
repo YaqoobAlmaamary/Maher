@@ -2,7 +2,7 @@
 import React, { Component } from 'react'
 import { AppLoading } from 'expo'
 import Firebase, { FirebaseProvider } from './config/Firebase'
-import { View, StyleSheet, Button , StatusBar} from 'react-native'
+import { View, StyleSheet, Button , StatusBar, Text} from 'react-native'
 import { Header, Container, StyleProvider, } from 'native-base'
 import * as Font from 'expo-font'
 import { Ionicons, FontAwesome, MaterialIcons } from '@expo/vector-icons'
@@ -48,42 +48,67 @@ const MyTheme = {
 }
 
 
-function TabNavigator() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
+class TabNavigator extends Component {
+  state = {
+    notifications: []
+  }
+  componentDidMount() {
+    if(Firebase.getCurrentUser() != null) {
+      Firebase.database().ref('notifications/'+Firebase.getCurrentUser().uid)
+        .on('value', snapshot => {
+          if(snapshot.exists())
+            this.setState({
+              notifications: Object.keys(snapshot.val())
+            })
+          else
+            this.setState({
+              notifications: []
+            })
+        })
+    }
+  }
+  componentWillUnmount() {
+    if(Firebase.getCurrentUser() != null)
+      Firebase.database().ref('notifications/'+Firebase.getCurrentUser().uid).off()
+  }
+  render() {
+    const { notifications } = this.state
+    return (
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+              tabBarIcon: ({ focused, color, size }) => {
+                let iconName;
 
-              if (route.name === 'Home') {
-                return <FontAwesome name='home' size={35} color={color} />
+                if (route.name === 'Home') {
+                  return <FontAwesome name='home' size={35} color={color} />
 
-              } else if (route.name === 'Notifications') {
+                } else if (route.name === 'Notifications') {
 
-                return <MaterialIcons name='notifications' size={35} color={color} />
-              } else if (route.name === 'Search') {
+                  return <BillWithBadge size={35} color={color} badgeCount={route.params.notifications.length} />
+                } else if (route.name === 'Search') {
 
-                return <MaterialIcons name='search' size={35} color={color} />
-              } else if (route.name === 'Profile') {
+                  return <MaterialIcons name='search' size={35} color={color} />
+                } else if (route.name === 'Profile') {
 
-                return <MaterialIcons name='person' size={35} color={color} />
-              }
+                  return <MaterialIcons name='person' size={35} color={color} />
+                }
 
-              // You can return any component that you like here!
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-          })}
-          tabBarOptions={{
-            activeTintColor: '#BB86FC',
-            inactiveTintColor: 'rgba(255, 255, 255, 0.6)',
-            showLabel: false,
-          }}>
-        <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Notifications" component={Notifications} />
-        <Tab.Screen name="Search" component={Search} />
-        <Tab.Screen name="Profile" component={Profile} />
-    </Tab.Navigator>
-  )
+                // You can return any component that you like here!
+                return <Ionicons name={iconName} size={size} color={color} />;
+              },
+            })}
+            tabBarOptions={{
+              activeTintColor: '#BB86FC',
+              inactiveTintColor: 'rgba(255, 255, 255, 0.6)',
+              showLabel: false,
+            }}>
+          <Tab.Screen name="Home" component={Home} />
+          <Tab.Screen name="Notifications" initialParams={{notifications}} component={Notifications} />
+          <Tab.Screen name="Search" component={Search} />
+          <Tab.Screen name="Profile" component={Profile} />
+      </Tab.Navigator>
+    )
+  }
 }
 
 function StackNavigator(props) {
@@ -94,6 +119,34 @@ function StackNavigator(props) {
       <Stack.Screen name="Reset Password" component={ResetPassword} />
     </Stack.Navigator>
   )
+}
+
+function BillWithBadge({ badgeCount, color, size }) {
+  return (
+    <View>
+      <MaterialIcons name='notifications' size={size} color={color} />
+      {badgeCount > 0 && (
+        <View
+          style={{
+            // On React Native < 0.57 overflow outside of parent will not work on Android, see https://git.io/fhLJ8
+            position: 'absolute',
+            right: 2,
+            top: 3,
+            backgroundColor: '#01A299',
+            borderRadius: 6,
+            width: 12,
+            height: 12,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+            {badgeCount}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
 }
 
 // "Main function"
@@ -116,7 +169,7 @@ export default class App extends Component {
       Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
       ...Ionicons.font,
     }).then(() => {
-      Firebase.checkUserAuth((user) => {
+      this.unsubscribe = Firebase.checkUserAuth((user) => {
         if(user){
           if(!this.state.isRegisterRequest){
             this.setState({
@@ -141,6 +194,10 @@ export default class App extends Component {
         }
       })
     })
+  }
+  componentWillUnmount(){
+    if(this.unsubscribe)
+      this.unsubscribe()
   }
 
   render() {

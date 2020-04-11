@@ -16,7 +16,8 @@ import SkillTagWithRemove from '../components/SkillTagWithRemove'
 import AwesomeAlert from 'react-native-awesome-alerts'
 import { useFocusEffect } from '@react-navigation/native'
 import { withFirebaseHOC } from '../../config/Firebase'
-import { NameInput, TextInputWithMsg } from '../components/Inputs'
+import { TextInputWithMsg } from '../components/Inputs'
+import NameInput from '../components/NameInput'
 import moment from 'moment'
 
 function CancelAlert (props) {
