@@ -246,7 +246,7 @@ class EditProfile extends Component {
   }
   componentDidMount() {
     checkConnectivity(() => {} , () => this.setState({firstNoInternetAlert: true})) //check connection
-    setTimeout(() => this.setState({isTimePassed: true}) , 5000)
+    //setTimeout(() => this.setState({isTimePassed: true}) , 5000)
     const { navigation } = this.props
     navigation.dangerouslyGetParent().dangerouslyGetParent().setOptions({ //hide tab bar
       tabBarVisible: false
