@@ -184,7 +184,7 @@ class Home extends Component {
           keyExtractor={ (item) => item.hackathonId }
         />
         {/*This will display the button to create a hackathon */}
-          <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate("Create Hackathon") }>
+          <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate( "Create Hackathon" ) }>
             <MaterialCommunityIcons size={27} name="plus" />
           </TouchableOpacity>
       </View>
