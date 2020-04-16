@@ -11,6 +11,7 @@ import TeamPage from '../screens/TeamPage'
 import InviteToTeam from '../screens/InviteToTeam'
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
 import CreateHackathon from "../screens/CreateHackathon"
+import Evaluate from "../screens/Evaluate"
 
 const Stack = createStackNavigator()
 
@@ -184,7 +185,7 @@ class Home extends Component {
           keyExtractor={ (item) => item.hackathonId }
         />
         {/*This will display the button to create a hackathon */}
-          <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate( "Create Hackathon" ) }>
+          <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate("Create Hackathon") }>
             <MaterialCommunityIcons size={27} name="plus" />
           </TouchableOpacity>
       </View>
@@ -214,6 +215,7 @@ function HomeStack(props) {
       <Stack.Screen name="Team Page" component={ TeamPage } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
       <Stack.Screen name="Invite To Team" component={ InviteToTeam } />
       <Stack.Screen name="Create Hackathon" component={ CreateHackathon } />
+      <Stack.Screen name="Evaluate" component={ Evaluate }  />
     </Stack.Navigator>
   );
 }
