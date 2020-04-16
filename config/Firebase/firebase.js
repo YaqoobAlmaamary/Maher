@@ -77,6 +77,14 @@ const Firebase = {
       .doc(hackathonId)
   },
 
+  getAllTeamsRef: (hackathonId) => {
+    return firebase
+     .firestore()
+     .collection('hackathons')
+     .doc(hackathonId)
+     .collection('teams')
+  },
+
   getTeamDoc: (hackathonId, teamId) => {
     return firebase
       .firestore()
@@ -164,6 +172,24 @@ const Firebase = {
           isLeader ?
               newTeamMembersArray
             : firebase.firestore.FieldValue.arrayRemove({type: 'participant', uid: uid})
+      })
+  },
+  
+  removeTeam: async (hackathonId, teamId, members) => {
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .collection('teams')
+      .doc(teamId)
+      .delete()
+
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .update({
+        teams: firebase.firestore.FieldValue.arrayRemove({teamId: teamId, members: members})
       })
   },
 

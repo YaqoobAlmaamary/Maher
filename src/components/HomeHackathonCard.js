@@ -16,9 +16,9 @@ class HomeHackathonCard extends Component {
     const { hackathon } = this.props
 
     if(type == 'judge'){
-      if(hackathon.status == 'review')
+      if(hackathon.reviewStatus == 'review')
         return  {type: 'good', text: 'Review period started'}
-      else if(hackathon.status == 'finished')
+      else if(hackathon.reviewStatus == 'finished')
         return {type: 'bad', text: 'Review period has finished'}
       else {
         return {type: 'bad', text: "Review period hasn't started yet"}
@@ -54,6 +54,9 @@ class HomeHackathonCard extends Component {
       return
     }
   }
+  isHackathonFull = () => {
+    return this.props.hackathon.teams.length == this.props.hackathon.maxTeams
+  }
   componentDidMount(){
     const { hackathon, firebase } = this.props
     const { uid } = firebase.getCurrentUser()
@@ -86,10 +89,14 @@ class HomeHackathonCard extends Component {
               {status != null &&
                 <Text style={[styles.status, { color: status.type == 'bad' ? '#CF6679' : '#01A299' }]}>{status.text}</Text>
               }
+              {this.isHackathonFull() &&
+                <Text style={styles.status}>Hackathon is full</Text>
+              }
             </View>
           </View>
           <View style={styles.row}>
             <View style={{flex: 1,justifyContent: 'flex-end'}}>
+              <Text style={styles.info}><MaterialCommunityIcons size={16} name="account-group" /> {hackathon.teams.length}/{hackathon.maxTeams} teams</Text>
               <Text style={styles.info}><MaterialCommunityIcons size={16} name="clock-outline" /> {getDuration(hackathon.startDateTime.seconds,hackathon.endDateTime.seconds)}</Text>
               <Text style={styles.location}><Entypo size={18} name="location-pin" />{hackathon.locationAddress}</Text>
             </View>
@@ -97,9 +104,21 @@ class HomeHackathonCard extends Component {
               <View style={{justifyContent: 'flex-end'}}>
                   {inTeam ?
                     <MyButton text="My Team" onPress={() => navigation.navigate("Team Page", {teamId: teamId, hackathonId: hackathon.hackathonId} ) } />
-                  : <MyButton text="Create Team" onPress={() => navigation.navigate("Create Team", {hackathonId: hackathon.hackathonId} ) } />}
+                  : <View>
+                      <MyButton text="View Teams" onPress={() => navigation.navigate("Teams", {hackathonId: hackathon.hackathonId} ) } />
+                      {!this.isHackathonFull() &&
+                      <MyButton disabled={this.isHackathonFull()} text="Create Team" onPress={() => navigation.navigate("Create Team", {hackathonId: hackathon.hackathonId} ) } />}
+                    </View>
+                  }
               </View>
             }
+            {type == 'judge' &&
+            <View style={{justifyContent: 'flex-end'}}>
+            { hackathon.reviewStatus == "review" &&
+              <MyButton text="Evaluate" onPress={() => navigation.navigate("Evaluate", {hackathonId: hackathon.hackathonId} ) } />
+            }
+            </View>
+          }
           </View>
         </View>
       </TouchableOpacity>
@@ -107,9 +126,13 @@ class HomeHackathonCard extends Component {
   }
 }
 
-function MyButton({text, onPress}){
+function MyButton({text, onPress, disabled}){
   return (
-    <TouchableOpacity style={styles.button} onPress={() => onPress()}>
+    <TouchableOpacity
+    style={[styles.button,
+      disabled &&
+        {opacity: 0.5}
+    ]} onPress={() => onPress()} disabled={disabled}>
       <Text style={styles.buttonText}>{text}</Text>
     </TouchableOpacity>
   )
@@ -141,16 +164,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   status: {
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 5,
-    color: '#CF6679',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    fontFamily: 'Roboto_medium',
-    fontSize: 14,
-  },
-  goodStatus: {
-    marginTop: 5,
-    color: '#01A299',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     fontFamily: 'Roboto_medium',
@@ -177,8 +192,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     margin: 5,
     padding: 10,
-    paddingLeft: 15,
-    paddingRight: 15,
+    paddingLeft: 10,
+    paddingRight: 10,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)'
