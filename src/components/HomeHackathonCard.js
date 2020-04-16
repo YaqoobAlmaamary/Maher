@@ -16,9 +16,9 @@ class HomeHackathonCard extends Component {
     const { hackathon } = this.props
 
     if(type == 'judge'){
-      if(hackathon.status == 'review')
+      if(hackathon.reviewStatus == 'review')
         return  {type: 'good', text: 'Review period started'}
-      else if(hackathon.status == 'finished')
+      else if(hackathon.reviewStatus == 'finished')
         return {type: 'bad', text: 'Review period has finished'}
       else {
         return {type: 'bad', text: "Review period hasn't started yet"}
@@ -100,6 +100,13 @@ class HomeHackathonCard extends Component {
                   : <MyButton text="Create Team" onPress={() => navigation.navigate("Create Team", {hackathonId: hackathon.hackathonId} ) } />}
               </View>
             }
+            {type == 'judge' &&
+            <View style={{justifyContent: 'flex-end'}}>
+            { hackathon.reviewStatus == "review" &&
+              <MyButton text="Evaluate" onPress={() => navigation.navigate("Evaluate", {hackathonId: hackathon.hackathonId} ) } />
+            }
+            </View>
+          }
           </View>
         </View>
       </TouchableOpacity>

@@ -77,6 +77,14 @@ const Firebase = {
       .doc(hackathonId)
   },
 
+  getAllTeamsRef: (hackathonId) => {
+    return firebase
+     .firestore()
+     .collection('hackathons')
+     .doc(hackathonId)
+     .collection('teams')
+  },
+
   getTeamDoc: (hackathonId, teamId) => {
     return firebase
       .firestore()
