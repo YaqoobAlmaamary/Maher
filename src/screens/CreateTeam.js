@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { View, KeyboardAvoidingView, StyleSheet, ScrollView, ActivityIndicator } from 'react-native'
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { Form, Item as FormItem, Label, Button, Input, Text, H3, Textarea } from 'native-base'
 import { TextInputWithMsg, TextArea } from '../components/Inputs'
 import { withFirebaseHOC } from '../../config/Firebase'
@@ -53,7 +54,7 @@ class CreateTeam extends Component {
       headerTitleAlign: 'center',
     })
     return (
-        <ScrollView>
+        <KeyboardAwareScrollView>
           <Form>
             <H3 style={styles.label}>Team Name*</H3>
             <TextInputWithMsg
@@ -89,7 +90,7 @@ class CreateTeam extends Component {
               </Button>
             }
           </Form>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     )
   }
 }
