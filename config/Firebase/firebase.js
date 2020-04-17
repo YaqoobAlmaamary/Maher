@@ -174,6 +174,24 @@ const Firebase = {
             : firebase.firestore.FieldValue.arrayRemove({type: 'participant', uid: uid})
       })
   },
+  
+  removeTeam: async (hackathonId, teamId, members) => {
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .collection('teams')
+      .doc(teamId)
+      .delete()
+
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonId)
+      .update({
+        teams: firebase.firestore.FieldValue.arrayRemove({teamId: teamId, members: members})
+      })
+  },
 
   // real-time database
   database: () => {
