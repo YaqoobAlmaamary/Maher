@@ -148,7 +148,7 @@ class InviteToTeam extends Component {
     }
     if(this.state.participants.length == 0){
       return (
-        <Text>No participants</Text>
+        <Text style={{textAlign: 'center', marginTop: 15}}>All participants with teams or there are no participants at the moment. Please try again later.</Text>
       )
     }
     return (
