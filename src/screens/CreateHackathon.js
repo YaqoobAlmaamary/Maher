@@ -25,7 +25,10 @@ class CreateHackathon extends React.Component{
             endDate: new Date(),
             endTime: new Date(),
             banner: "",
+            prizes: [],
         }
+
+        this.prizePositionCounter = 1;
     }
 
     componentDidMount(){
@@ -69,6 +72,28 @@ class CreateHackathon extends React.Component{
         }
     }
 
+    //This method will take an item and update the prizes
+    //array in the state whether its new item or not
+    add_item_to_prizes( item ){
+        var buffer = this.state.prizes.filter( ( element ) => element !== item )
+        buffer.push( item )
+        this.setState( { prizes: buffer } )
+    }
+
+    // this method add a prize to the
+    addPrize(){
+        var buffer = this.state.prizes
+        // create new prize and give it a position
+        // this.prizePositionCounter will start from 0
+        buffer[this.prizePositionCounter] = { position: this.prizePositionCounter + 1 }
+        this.prizePositionCounter++;
+        this.setState( { prizes: buffer } )
+    }
+
+    removePrize( item ){
+        var buffer = this.state.prizes
+    }
+
     addCriteria(){
         // new criteria
         var criteria = {
@@ -87,13 +112,17 @@ class CreateHackathon extends React.Component{
         this.setState( () => ({ criteria: criterias }) )
     }
 
+
     async addBanner(){
         let permissionResult = await ImagePicker.requestCameraRollPermissionsAsync();
         if( permissionResult === false ){
             alert( "Permission need to add banner" )
             return;
         }
-        let pickerResult = await ImagePicker.launchImageLibraryAsync();
+        let pickerResult = await ImagePicker.launchImageLibraryAsync({
+            aspect: [5, 3],
+            quality: 0.5,
+        });
 
         if (pickerResult.cancelled === true) {
           return;
@@ -131,14 +160,14 @@ class CreateHackathon extends React.Component{
                     />
 
                     {/**List of critera*/}
-                    <H3 style={ styles.label }>Criterias</H3>
+                    <H3 style={ styles.label }>Criteria</H3>
                     <FlatList 
                         data={ this.state.criteria }
                         renderItem={ ({item}) =>
                         // for each element in criteria array
                         // render it an input place
                         <View>
-                            <H3 style={ styles.label }>Criteria Name</H3>     
+                            <H3 style={ styles.label }>Criterion Name</H3>     
                             <TextInputWithMsg 
                                 label="Name"
                                 value={ item.name }
@@ -158,13 +187,13 @@ class CreateHackathon extends React.Component{
                                 }}
                             />
                             <TouchableOpacity style={ styles.btn } onPress={ () => this.removeCriteria( item )}>
-                                <Text style={ styles.removeCriteria } >Remove Criteria</Text>
+                                <Text style={ styles.removeCriteria } >Remove Criterion</Text>
                             </TouchableOpacity>
                         </View>}
                     />
                     {/**Button to add criteria */}
                     <TouchableOpacity style={ styles.btn } onPress={ () => this.addCriteria() }>
-                        <Text style={ styles.addCriteria }>Add Criteria</Text>
+                        <Text style={ styles.addCriteria }>Add Criterion</Text>
                     </TouchableOpacity>
 
                     {/**maxInTeam */}
@@ -247,8 +276,50 @@ class CreateHackathon extends React.Component{
                         <Text style={ styles.btnText } >Add Banner</Text>
                     </TouchableOpacity>
                     
+                    {/**List of Prizes*/}
+                    <H3>Prizes</H3>
+                    <FlatList
+                    data={ this.state.prizes } 
+                    renderItem={ (item) =>
+                        <View>
+                            <H3>Prize in position { this.prizePositionCounter }</H3>
+                            <H3>Type of the prize (for example cash or material possession like fridge or TV)</H3>
+                            <TextInputWithMsg
+                            label="Type"
+                            value={ item.type }
+                            onChangeText={ (type) => {
+                                item.type = type
+                                this.add_item_to_prizes( item )
+                            }}
+                            />
 
+                            <H3>Value (how much is the price worth)</H3>
+                            <TextInputWithMsg 
+                            label="value"
+                            value={ item.value }
+                            onChangeText={ (value) => {
+                                item.value = value
+                                this.add_item_to_prizes( item )
+                            }}
+                            />
 
+                            <H3>Description</H3>
+                            <TextInputWithMsh
+                            label="describe the prize"
+                            value={ item.desc }
+                            onChangeText={ (desc) => {
+                                item.desc = desc
+                                this.add_item_to_prizes( item )
+                            }}
+                            />
+                        </View>
+                    }
+                    />
+                    {/**Button to add a prize */}
+                    <TouchableOpacity onPress={ () => addPrize }>
+                        <Text>Add Prize</Text>
+                    </TouchableOpacity>
+                
 
                 </Form>
             </ScrollView> 
