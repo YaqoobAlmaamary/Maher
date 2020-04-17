@@ -1,5 +1,5 @@
-import React, { Component } from 'react'
-import { View, FlatList, TextInput, TouchableOpacity } from 'react-native'
+import React, { Component, useState } from 'react'
+import { View, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet } from 'react-native'
 import { Text, Input } from 'native-base'
 import HackathonCard from '../components/HackathonCard'
 import HackathonPage from '../screens/HackathonPage'
@@ -8,6 +8,8 @@ import Constants from 'expo-constants'
 import { createStackNavigator } from '@react-navigation/stack'
 import { withFirebaseHOC } from '../../config/Firebase'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+import AwesomeAlert from 'react-native-awesome-alerts'
+import RadioForm from 'react-native-simple-radio-button'
 
 const Stack = createStackNavigator()
 
@@ -15,13 +17,46 @@ class Search extends Component {
   state = {
     query: '',
     hackathons: [],
-    result: []
+    result: [],
+    sort: 0,
+    isSortModalVisible: false
   }
   search = (query) => {
     this.setState({
       query,
       result: this.state.hackathons.filter((hackathon) => hackathon.name.toLowerCase().search(query.toLowerCase().trim()) !== -1)
     })
+  }
+  sort = (sortValue) => {
+    this.setState({
+      sort: sortValue,
+      isSortModalVisible: false
+    })
+
+    // closest to start
+    if(sortValue == 0){
+      this.setState({
+        hackathons: this.state.hackathons.sort(( a, b ) => ( a.startDateTime.seconds - b.startDateTime.seconds ) )
+      })
+    }
+    else if(sortValue == 1){
+      this.setState({
+        hackathons: this.state.hackathons.sort((a, b) => ( b.participants.length - a.participants.length ))
+      })
+    }
+    else if(sortValue == 2){
+      const nonCash = this.state.hackathons.filter((hackathon) => hackathon.totalPrizes == 'non-cash')
+
+      const sortedByPrize = this.state.hackathons.filter((hackathon) => hackathon.totalPrizes != 'non-cash')
+        .sort((a, b) => ( parseFloat(b.totalPrizes) - parseFloat(a.totalPrizes)))
+
+      this.setState({
+        hackathons: sortedByPrize.concat(nonCash)
+      })
+    }
+    else {
+      console.error("Error in sort function, sortValue should be (0, 1, 2) ; but got: "+sortValue)
+    }
   }
   componentDidMount() {
     const { firebase } = this.props
@@ -70,9 +105,9 @@ class Search extends Component {
         backgroundColor: '#272727'
       },
       headerLeft:() => (
-        <TouchableOpacity style={{marginLeft: 10}}>
+        <TouchableOpacity style={{marginLeft: 10}} onPress={() => this.setState({isSortModalVisible: true})}>
           <MaterialCommunityIcons size={32}
-            style={{color: 'rgba(255,255,255,0.87)'}}
+            style={{color: this.state.sort == 0 ? 'rgba(255,255,255,0.87)' : '#BB86FC' } }
             name='filter-variant' />
         </TouchableOpacity>
       ),
@@ -82,11 +117,16 @@ class Search extends Component {
     })
     return (
       <View style={{ flex: 1, marginTop: 10 }}>
-        {<FlatList
+        <FlatList
           data={query === '' ? hackathons: result}
           renderItem={({item}) => <HackathonCard hackathon={item} goToHackathon={() => this.props.navigation.navigate("Hackathon Page", {hackathonId: item.hackathonId, name: item.name})} /> }
           keyExtractor={(item) => item.hackathonId}
-        />}
+        />
+        <SortModal
+          modalVisible={this.state.isSortModalVisible}
+          sortInitial={this.state.sort}
+          sort={this.sort}
+          hideModal={() => this.setState({isSortModalVisible: false})} />
       </View>
     )
   }
@@ -101,6 +141,41 @@ function SearchBar({query, search}){
       onChangeText={(q) => search(q)}
       value={query} />
     </View>
+  )
+}
+
+function SortModal({modalVisible, sortInitial, sort, hideModal}){
+  const radio_props = [
+    {label: 'Closest to start', value: 0 },
+    {label: 'Most Participants', value: 1 },
+    {label: 'Most Total Prizes', value: 2 }
+  ]
+  return (
+    <AwesomeAlert
+        show={modalVisible}
+        title="Sort Hackathons"
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21, alignSelf: 'flex-start'}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e'}}
+        onDismiss={() => hideModal()}
+        customView={
+          <View style={{margin: 20, marginBottom: 10}}>
+            <RadioForm
+              style={{alignSelf: 'center'}}
+              radio_props={radio_props}
+              initial={sortInitial}
+              borderWidth={1}
+              formHorizontal={false}
+              labelHorizontal={true}
+              buttonColor={'rgba(255, 255, 255, 0.87)'}
+              selectedButtonColor={'#BB86FC'}
+              buttonSize={13}
+              labelStyle={{fontSize: 18, color: 'rgba(255, 255, 255, 0.87)', marginBottom:18}}
+              animation={false}
+              onPress={(value) => sort(value)}
+            />
+          </View>
+        }
+      />
   )
 }
 
