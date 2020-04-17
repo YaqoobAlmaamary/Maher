@@ -1,10 +1,14 @@
 import React, { Component } from 'react'
 import { View, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native'
 import { Text, Icon } from 'native-base'
-import { MaterialCommunityIcons, Entypo } from '@expo/vector-icons'
+import { MaterialCommunityIcons, Entypo, MaterialIcons } from '@expo/vector-icons'
+import AwesomeAlert from 'react-native-awesome-alerts'
 import { withFirebaseHOC } from '../../config/Firebase'
 import { createStackNavigator } from '@react-navigation/stack'
 import moment from 'moment'
+import TeamProfile from './TeamProfile'
+import UserProfile from './UserProfile'
+import Toast, {DURATION} from 'react-native-easy-toast'
 
 const Stack = createStackNavigator()
 
@@ -12,19 +16,103 @@ function NotificationNavigator(props) {
   return (
     <Stack.Navigator initialRouteName="Notifications">
       <Stack.Screen name="Notifications" component={NotificationsWithFirebase} options={{headerTitleAlign: 'center'}} />
+      <Stack.Screen name="Team Profile" component={TeamProfile} />
+      <Stack.Screen name="User Profile" component={UserProfile} />
     </Stack.Navigator>
   )
 }
 
 class Notifications extends Component {
+  constructor(props) {
+    super(props)
+    this.toast = React.createRef();
+  }
   state = {
-    notifications: null
+    notifications: null,
+    selectedNotification: null,
+    showTeamFullAlert: false,
+    showUserInTeamAlert: false
   }
+
+  check = async (hackathonId, teamId, uid) => {
+    const snapshot = await this.props.firebase.getHackathonDoc(hackathonId).get()
+    const hackathon = snapshot.data()
+
+    let isTeamExists = false
+    let isTeamFull = false
+    let isUserInTeam = false
+
+    hackathon.teams.map((team) => {
+      if(team.teamId == teamId){
+        isTeamExists = true
+
+        if(team.members.length == hackathon.maxInTeam)
+          isTeamFull = true
+
+      }
+
+      if(team.members.includes(uid))
+        isUserInTeam = true
+
+    })
+
+
+
+    return {isTeamExists: isTeamExists ,isUserInTeam: isUserInTeam, isTeamFull: isTeamFull }
+  }
+
   accept = async (notification) => {
-    const { uid } = this.props.firebase.getCurrentUser()
-    this.discard(notification)
-    await this.props.firebase.addUserToTeam(uid, notification.hackathonId, notification.teamId)
+    // optimistic update, (means suppose the happy scenario will happen, if not return to the original state )
+    this.setState({
+      selectedNotification: notification,
+      notifications: this.state.notifications.filter((n) => n.notificationId != notification.notificationId)
+    })
+
+    //check whether it's a request from team leader or request from user himself to join a team.
+    const uid = notification.type == 'team' ? this.props.firebase.getCurrentUser().uid : notification.from
+
+    const check = await this.check(notification.hackathonId, notification.teamId, uid)
+
+    const isError = !check.isTeamExists || check.isTeamFull || check.isUserInTeam
+
+    if(isError) {
+      if(!check.isTeamExists){
+        this.props.firebase.database().ref('notifications/'+this.props.firebase.getCurrentUser().uid+"/"+notification.notificationId)
+        .remove()
+        this.toast.current.show("Sorry, The Team doesn't exists", 1500)
+        return
+      }
+      else if(check.isTeamFull){
+        // show team is full alert
+        this.setState({
+          showTeamFullAlert: true
+        })
+      }
+      else if(check.isUserInTeam){
+        // show user in already in team alert
+        this.setState({
+          showUserInTeamAlert: true
+        })
+      }
+
+      // return the deleted notification to the state
+      this.setState({
+        notifications: this.state.notifications.concat(notification).sort((a, b) => (b.time - a.time))
+      })
+    }
+    else {
+      this.discard(notification)
+
+      await this.props.firebase.addUserToTeam(uid, notification.hackathonId, notification.teamId)
+      if(notification.type == 'team'){
+        this.props.navigation.navigate("Home")
+      }
+      else if(notification.type == 'join-team-request') {
+        this.toast.current.show(`${notification.fromFullName} added successfully`, 1500)
+      }
+    }
   }
+
   discard = (notification) => {
     this.setState({
       notifications: this.state.notifications.filter((n) => n.notificationId != notification.notificationId)
@@ -32,11 +120,15 @@ class Notifications extends Component {
     this.props.firebase.database().ref('notifications/'+this.props.firebase.getCurrentUser().uid+"/"+notification.notificationId)
       .remove()
         .catch(() => {
+          const tempNotificationsArray = this.state.notifications
+          tempNotificationsArray.unshift(notification)
+
           this.setState({
-            notifications: this.state.notifications.unShift(notification)
+            notifications: tempNotificationsArray
           })
         })
   }
+
   componentDidMount() {
       this.notificationsRef = this.props.firebase.database().ref('notifications/'+this.props.firebase.getCurrentUser().uid)
 
@@ -44,7 +136,7 @@ class Notifications extends Component {
       this.notificationsRef
         .on('value', snapshot => {
           if(snapshot.exists())
-            notifications= Object.values(snapshot.val())
+            notifications= Object.values(snapshot.val()).sort((a, b) => (b.time - a.time))
 
           else
             notifications = null
@@ -63,13 +155,43 @@ class Notifications extends Component {
   }
   render() {
     return (
-      <FlatList
-        style={{flex: 1}}
-        data={this.state.notifications}
-        renderItem={({item}) => <NotificationCard accept={this.accept} discard={this.discard} notification={item} /> }
-        keyExtractor={(item) => item.notificationId}
-        refreshing={true}
-      />
+      <View style={{flex: 1}}>
+        {this.state.notifications == null || this.state.notifications.length == 0 ?
+          <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Text style={styles.mute}><MaterialIcons size={150} name="notifications-active" /></Text>
+            <Text style={styles.mute}>No new notifications!</Text>
+            <Text style={[styles.mute, {fontSize: 14}]}>We're listening..</Text>
+          </View>
+        : <FlatList
+            style={{flex: 1}}
+            data={this.state.notifications}
+            renderItem={({item}) =>
+              <NotificationCard
+                goTo={() => {
+                  item.type == 'team' ?
+                    this.props.navigation.navigate("Team Profile", {teamId: item.teamId, hackathonId: item.hackathonId})
+                  : this.props.navigation.navigate("User Profile", {uid: item.from})
+                }}
+                accept={this.accept}
+                discard={this.discard}
+                notification={item} /> }
+            keyExtractor={(item) => item.notificationId}
+            refreshing={true}
+          />}
+        <TeamFullAlert
+          showAlert={this.state.showTeamFullAlert}
+          notification={this.state.selectedNotification}
+          discard={this.discard}
+          hideAlert={() => this.setState({showTeamFullAlert: false})}
+        />
+        <UserInTeamAlert
+          showAlert={this.state.showUserInTeamAlert}
+          notification={this.state.selectedNotification}
+          discard={this.discard}
+          hideAlert={() => this.setState({showUserInTeamAlert: false})}
+        />
+        <Toast textStyle={{fontSize: 16, color: 'white'}} position='bottom' positionValue={200} ref={this.toast}/>
+      </View>
     )
   }
 }
@@ -78,9 +200,28 @@ const NotificationsWithFirebase = withFirebaseHOC(Notifications)
 
 class NotificationCard extends Component {
   state = {
+    title: '',
+    message: '',
     currTime: Date.now()
   }
+  loadData = (notification) => {
+    if(notification == null)
+      return
+    if(notification.type == 'team'){
+      this.setState({
+        title: "Team Invitation Request!",
+        message: `${notification.fromFullName} invites you to join ${notification.teamName} in ${notification.hackathonName}`
+      })
+    }
+    else if (notification.type == 'join-team-request'){
+      this.setState({
+        title: "Joining Team Request!",
+        message: `${notification.fromFullName} is requesting to join your ${notification.teamName} in ${notification.hackathonName}`
+      })
+    }
+  }
   componentDidMount(){
+    this.loadData(this.props.notification)
     this.timeInterval = setInterval( () => {
       this.setState({
         currTime : Date.now()
@@ -92,19 +233,18 @@ class NotificationCard extends Component {
       clearInterval(this.timeInterval)
   }
   render() {
-    const { notification, discard, accept } = this.props
-    const message = `${notification.fromFullName} invites you to join ${notification.teamName} in ${notification.hackathonName}`
+    const { notification, discard, accept, goTo } = this.props
     return (
-      <TouchableOpacity style={styles.notificationConatiner}>
+      <TouchableOpacity style={styles.notificationConatiner} onPress={() => goTo()}>
         <View style={[styles.row, {justifyContent: 'space-between'}]}>
-          <Text style={styles.title}>Team Invitation Request!</Text>
+          <Text style={styles.title}>{this.state.title}</Text>
           <Text style={styles.time}>{moment(notification.time).from(this.state.currTime)}</Text>
         </View>
         <View style={styles.row}>
           <Image style={styles.notificationPhoto}
             source={notification.fromPhotoUri == '' ? require('../assets/no-image.png') : {uri: notification.fromPhotoUri}} />
           <View style={{flex: 1}}>
-            <Text>{message}</Text>
+            <Text>{this.state.message}</Text>
           </View>
         </View>
         <View style={[styles.row, {justifyContent: 'flex-end'}]}>
@@ -126,6 +266,68 @@ class NotificationCard extends Component {
       </TouchableOpacity>
     )
   }
+}
+
+function TeamFullAlert({showAlert, notification, discard, hideAlert}) {
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        title="Team is full!"
+        message={"Unfortunately, the team is full right now."+"\nYou can keep this notification if want, or discard it?"}
+        showCancelButton={true}
+        showConfirmButton={true}
+        cancelText="Discard"
+        confirmText="Keep"
+        confirmButtonColor="#383838"
+        cancelButtonColor='#CF6679'
+        onCancelPressed={() => {
+          discard(notification)
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          hideAlert()
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
+}
+
+function UserInTeamAlert({showAlert, notification, discard, hideAlert}) {
+  if(notification == null)
+    return null
+
+  const title = notification.type == 'team' ? "You are already in a team!" : `${notification.fromFullName} is already in a team!`
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        title={title}
+        message="You can keep this notification if want. or discard it?"
+        showCancelButton={true}
+        showConfirmButton={true}
+        cancelText="Discard"
+        confirmText="Keep"
+        confirmButtonColor="#383838"
+        cancelButtonColor='#CF6679'
+        onCancelPressed={() => {
+          discard(notification)
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          hideAlert()
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
 }
 
 const styles = StyleSheet.create({
@@ -170,6 +372,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)'
   },
+  mute: {
+    color: 'rgba(255,255,255,0.2)'
+  }
 })
 
 export default NotificationNavigator
