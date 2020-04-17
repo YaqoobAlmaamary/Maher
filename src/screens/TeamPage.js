@@ -30,6 +30,18 @@ class TeamPage extends Component {
         })
     })
   }
+  isUserInThisTeam = () => {
+    let userFound = false
+    if(this.state.team.members.length == 0)
+      return true
+    else {
+      this.state.team.members.map(member => {
+        if(member.uid == this.props.firebase.getCurrentUser().uid)
+          userFound = true
+      })
+    }
+    return userFound
+  }
   loadMembersDataToState = async (members) => {
     const membersPromises = members.map(async (member) => {
       const memberDoc = await this.props.firebase.getUserDataOnce(member.uid)
@@ -46,10 +58,10 @@ class TeamPage extends Component {
     if(members.length == 0 || hackathon.minInTeam == null)
       return {type: '', text: ''}
     else {
+      if(members.length == hackathon.maxInTeam)
+        return {type: 'good', text: 'The team is full'}
       if(members.length >= hackathon.minInTeam)
         return {type: 'good', text: 'The team has the minimum number of members'}
-      if(members.length == hackathon.minInTeam)
-        return {type: 'good', text: 'The team is full'}
       else {
         if(members.length == hackathon.minInTeam-1)
           return {type: 'bad', text: 'Team needs at least one more member'}
@@ -65,13 +77,6 @@ class TeamPage extends Component {
     const { hackathonId } = this.state.hackathon
     const { teamId } = this.state.team
     await this.props.firebase.removeUserFromTeam(memberId, hackathonId, teamId)
-    this.setState({
-      submiting: false
-    },() => {
-      this.setState({
-        showRemoveMemberAlert: false,
-      })
-    })
   }
   leaveTeam = async () => {
     this.setState({
@@ -94,18 +99,41 @@ class TeamPage extends Component {
     this.setState({
       submiting: true
     })
-    this.props.navigation.replace("Home")
+    this.setState({
+      submiting: false
+    },() => {
+      this.setState({
+        showRemoveTeamAlert: false,
+      })
+      this.props.navigation.goBack()
+    })
+  }
+  removeTeam = async () => {
+    this.setState({
+      submiting: true
+    })
+    const { uid } = this.props.firebase.getCurrentUser()
+    const { hackathonId } = this.state.hackathon
+    const { team } = this.state
+
+    await this.props.firebase.removeTeam(hackathonId, team.teamId, [uid])
+
+    this.props.navigation.goBack()
 
   }
   async componentDidMount(){
     const { teamId, hackathonId } = this.props.route.params
     this.unsubscribe = this.props.firebase.getTeamDoc(hackathonId, teamId)
       .onSnapshot( async (doc) => {
-        await this.loadMembersDataToState(doc.data().members)
-        this.findLeader(doc.data().members)
-        this.setState({
-          team: doc.data(),
-        })
+        if(doc.exists){
+          await this.loadMembersDataToState(doc.data().members)
+          this.findLeader(doc.data().members)
+          this.setState({
+            team: doc.data(),
+            showRemoveMemberAlert: false,
+            submiting: false,
+          })
+        }
       })
 
     const hackathon = await this.props.firebase.getHackathonDoc(hackathonId).get()
@@ -119,7 +147,7 @@ class TeamPage extends Component {
       this.unsubscribe()
   }
   render() {
-    const { team, hackathon, isReady, members, leaderId, showLeaveAlert, showRemoveMemberAlert, submiting } = this.state
+    const { team, hackathon, isReady, members, leaderId, showLeaveAlert, showRemoveMemberAlert, showRemoveTeamAlert, submiting } = this.state
     const { uid } = this.props.firebase.getCurrentUser()
     const status = this.getTeamStatus()
     this.props.navigation.setOptions({
@@ -131,12 +159,22 @@ class TeamPage extends Component {
         <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
       )
     }
+    if(!this.isUserInThisTeam()){
+      return (
+        <Text style={{alignSelf: 'center', margin: 25}}>
+          You are not a member in this team.
+        </Text>
+      )
+    }
     return (
       <View style={{flex: 1,marginTop: 10}}>
-        <View style={styles.row}>
+        <View style={[styles.row, {justifyContent: 'space-between'}]}>
           <Text style={styles.header}>Team Name: </Text>
-          <Text style={{fontSize: 18}}>{team.name}</Text>
+          <TouchableOpacity style={{marginRight: 10}} onPress={() => this.props.navigation.navigate("Edit Team", {teamId: team.teamId, hackathonId: hackathon.hackathonId})}>
+            <Text style={styles.btn}><MaterialCommunityIcons size={18} name="square-edit-outline" />Edit</Text>
+          </TouchableOpacity>
         </View>
+        <Text style={{fontSize: 18, marginLeft: 15, marginBottom: 10}}>{team.name}</Text>
         <Text style={styles.header}>Team Status: </Text>
         <Text style={[styles.status, {color: status.type == 'bad' ? '#CF6679' : '#01A299'}]}>{status.text}</Text>
         <View style={[styles.row, {justifyContent: 'space-between'}]}>
@@ -189,14 +227,23 @@ class TeamPage extends Component {
             </Text>
           </TouchableOpacity>
         }
-        <TouchableOpacity
-          onPress={() => this.setState({showLeaveAlert: true})}
-          style={{alignSelf: 'flex-start', margin: 20, opacity: members.length == 1 ? 0.5 : 1}}
-          disabled={members.length == 1}>
-          <Text style={[styles.btn, {color: '#CF6679'}]}>
-            Leave Team
-          </Text>
-        </TouchableOpacity>
+        {team.members.length == 1 ?
+          <TouchableOpacity
+              onPress={() => this.setState({showRemoveTeamAlert: true})}
+              style={{alignSelf: 'flex-start', margin: 20}}>
+              <Text style={[styles.btn, {color: '#CF6679'}]}>
+                Remove Team
+              </Text>
+            </TouchableOpacity>
+        : <TouchableOpacity
+            onPress={() => this.setState({showLeaveAlert: true})}
+            style={{alignSelf: 'flex-start', margin: 20, opacity: members.length == 1 ? 0.5 : 1}}
+            disabled={members.length == 1}>
+            <Text style={[styles.btn, {color: '#CF6679'}]}>
+              Leave Team
+            </Text>
+          </TouchableOpacity>
+        }
         <LeaveAlert
           showAlert={showLeaveAlert}
           hideAlert={() => this.setState({showLeaveAlert: false})}
@@ -208,6 +255,12 @@ class TeamPage extends Component {
           showAlert={showRemoveMemberAlert}
           hideAlert={() => this.setState({showRemoveMemberAlert: false})}
           removeMember={this.removeMember}
+          submiting={submiting}
+        />
+        <RemoveTeamAlert
+          showAlert={showRemoveTeamAlert}
+          hideAlert={() => this.setState({showRemoveTeamAlert: false})}
+          removeTeam={this.removeTeam}
           submiting={submiting}
         />
       </View>
@@ -267,6 +320,37 @@ function RemoveMemberAlert({member, showAlert, hideAlert, removeMember, submitin
         }}
         onConfirmPressed={() => {
           removeMember(member.uid)
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
+}
+
+function RemoveTeamAlert({showAlert, hideAlert, removeTeam, submiting}) {
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        showProgress={submiting}
+        progressSize="large"
+        progressColor="#BB86FC"
+        title="Remove Team"
+        message={"Are you sure you want to remove your team?"}
+        showCancelButton={!submiting}
+        showConfirmButton={!submiting}
+        cancelText="Close"
+        confirmText="Remove"
+        confirmButtonColor='#CF6679'
+        cancelButtonColor="#383838"
+        onCancelPressed={() => {
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          removeTeam()
         }}
         titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
         messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
