@@ -9,7 +9,8 @@ import AwesomeAlert from 'react-native-awesome-alerts'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import RadioForm from 'react-native-simple-radio-button'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { NameInput, TextInputWithMsg } from '../components/Inputs'
+import { TextInputWithMsg } from '../components/Inputs'
+import NameInput from '../components/NameInput'
 import TextButton from '../components/TextButton'
 import CountryPicker from "../components/CountryPicker"
 import SkillsInput from '../components/SkillsInput'
@@ -360,20 +361,22 @@ class EditProfile extends Component {
                   </View>
                 }
               </View>
-              <TextInputWithMsg
-                value={username}
-                error={usernameError}
-                success={usernameMsg}
-                label={"User name"}
-                placeholder={"username"}
-                onChangeText={this.usernameOnChange}
-              />
-              {submiting && <ActivityIndicator style={{marginLeft:20, alignSelf: 'flex-start'}} size="small" color='#BB86FC' />}
-              <NameInput
-                values={{firstName: firstName, lastName: lastName}}
-                onFirstNameChange={(firstName) => this.setState({firstName})}
-                onLastNameChange={(lastName) => this.setState({lastName})}
-                blurOnSubmitLast={true}/>
+              <View style={{marginTop: 10}}>
+                <TextInputWithMsg
+                  value={username}
+                  error={usernameError}
+                  success={usernameMsg}
+                  label={"User name"}
+                  placeholder={"username"}
+                  onChangeText={this.usernameOnChange}
+                />
+                {submiting && <ActivityIndicator style={{marginLeft:20, alignSelf: 'flex-start'}} size="small" color='#BB86FC' />}
+                <NameInput
+                  values={{firstName: firstName, lastName: lastName}}
+                  onFirstNameChange={(firstName) => this.setState({firstName})}
+                  onLastNameChange={(lastName) => this.setState({lastName})}
+                  blurOnSubmitLast={true}/>
+              </View>
               <Text style={{marginLeft: 20, marginTop: 15, alignSelf: 'flex-start'}}>
                 Your Skills <Text style={{color: 'rgba(255, 255, 255, 0.6)'}}>{skills.length}</Text>
               </Text>
@@ -623,7 +626,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#1e1e1e',
-    elevation: 1
+    elevation: 1,
+    paddingBottom: 10
   },
   image: {
     width: 120,
