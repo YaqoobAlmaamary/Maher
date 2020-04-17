@@ -20,7 +20,7 @@ export default function NameInput({autoFocus, onFirstNameChange, onLastNameChang
         onBlur={() => setIsFocusedFirst(false)}
         onFocus={() => setIsFocusedFirst(true)} />
       </FormItem>
-      <FormItem floatingLabel style={[styles.formItem, { flex: 1, marginRight: 7.5, borderColor: isFocusedLast ? '#BB86FC' : '#2f2f2f'}]}>
+      <FormItem floatingLabel style={[styles.formItem, { flex: 1, marginLeft: 7.5, borderColor: isFocusedLast ? '#BB86FC' : '#2f2f2f'}]}>
         <Label style={styles.label}>Last name</Label>
         <Input placeholder="last name"
         style={styles.textInput}
