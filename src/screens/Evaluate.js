@@ -1,5 +1,5 @@
 import React, {Component } from 'react'
-import { View, StyleSheet, Image, TouchableOpacity , SectionList } from 'react-native'
+import { View, StyleSheet, Image, TouchableOpacity , SectionList , ActivityIndicator } from 'react-native'
 import { Text, Button } from 'native-base'
 import { MaterialCommunityIcons, FontAwesome, Ionicons, Entypo } from '@expo/vector-icons'
 import {getDuration} from '../../utils/helper'
@@ -12,6 +12,7 @@ class Evaluate extends Component {
   state = {
     reviewed : [],
     notReviewed : [],
+    isTeamsReady: false
 
   }
 
@@ -55,6 +56,7 @@ class Evaluate extends Component {
       this.setState( {
         reviewed : reviewed ,
         notReviewed : notReviewed,
+        isTeamsReady: true
       })
 
   }
@@ -64,6 +66,11 @@ class Evaluate extends Component {
     render() {
       const { reviewed , notReviewed  } = this.state
 
+      if(!this.state.isTeamsReady){
+        return (
+          <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
+        )
+      }
         return (
 
           <SectionList
@@ -96,6 +103,7 @@ class Evaluate extends Component {
 }
 
 function TeamCard ( { team , navigation } ) {
+
 
   return(
     <TouchableOpacity  style={styles.container}>
