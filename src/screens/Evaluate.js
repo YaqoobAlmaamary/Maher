@@ -28,25 +28,27 @@ class Evaluate extends Component {
     let notReviewed = []
 
 
+
     teamsCollection.forEach( (team) => {
-      if(team.data().reviews == null ){ return }
-    const reviewJudges = Object.keys(team.data().reviews)
+      const teamData = team.data()
+      teamData['maxTeams'] = hackathonCollection.data().maxInTeam
+      //if no one reviewed the team before
+      if(teamData.reviews == null ){
+        teamData['isReviewed'] = false
+        notReviewed = notReviewed.concat(teamData)
+      }
+      else {
+        const reviewJudges = Object.keys(team.data().reviews)
+        if(reviewJudges.includes(uid)){
+          teamData['isReviewed'] = true
 
+          reviewed = reviewed.concat(teamData)
+        }else {
+          teamData['isReviewed'] = false
+          notReviewed = notReviewed.concat(teamData)
 
-
-    const teamData = team.data()
-    teamData['maxTeams'] = hackathonCollection.data().maxInTeam
-    if(reviewJudges.includes(uid)){
-      teamData['isReviewed'] = true
-
-      reviewed = reviewed.concat(teamData)
-    }else {
-      teamData['isReviewed'] = false
-
-
-      notReviewed = notReviewed.concat(teamData)
-
-    }
+        }
+      }
 
      })
 
@@ -54,7 +56,6 @@ class Evaluate extends Component {
         reviewed : reviewed ,
         notReviewed : notReviewed,
       })
-
 
   }
 
@@ -77,7 +78,9 @@ class Evaluate extends Component {
             renderItem={
               ( {item} ) => (
                 <TeamCard
+
                 team = {item}
+                navigation={this.props.navigation}
                 />)
             }
             renderSectionHeader={
@@ -86,20 +89,13 @@ class Evaluate extends Component {
             keyExtractor={ (item) => item.teamId }
           />
 
-
-
-
-
-
-        );
-
-
+        )
 }
 
 
 }
 
-function TeamCard ( { team } ) {
+function TeamCard ( { team , navigation } ) {
 
   return(
     <TouchableOpacity  style={styles.container}>
@@ -121,11 +117,12 @@ function TeamCard ( { team } ) {
     <View style={styles.row , {flexDirection: 'row-reverse'}}>
 
       { team.isReviewed ?
-        <MyButton text="edit review" /*onPress={() => navigation.navigate("Edit Review", {judgeId: judge id } ) }*/ />
-      : <MyButton text="review" /*onPress={() => navigation.navigate("Review Page", {judgeId: judge id } )  }*/ />
+        <MyButton text="edit review" onPress={() => navigation.navigate("Edit Review", {hackathonId: team.hackathonId , teamId: team.teamId }) } />
+      : <MyButton text="review" onPress={() => navigation.navigate("Review Page" , {hackathonId: team.hackathonId , teamId: team.teamId })  } />
+
     }
 
-      <MyButton text="profile" /*onPress={() => navigation.navigate("Team Profile", {judgeId: judge id } ) }*/ />
+      <MyButton text="profile" onPress={() => navigation.navigate("Team Profile", {hackathonId: team.hackathonId , teamId: team.teamId }) } />
 
     </View>
     </View>

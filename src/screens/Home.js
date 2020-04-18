@@ -15,6 +15,8 @@ import InviteToTeam from '../screens/InviteToTeam'
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
 import CreateHackathon from "../screens/CreateHackathon"
 import Evaluate from "../screens/Evaluate"
+import ReviewPage from "../screens/ReviewPage"
+import EditReview from "../screens/EditReview"
 
 const Stack = createStackNavigator()
 
@@ -222,6 +224,8 @@ function HomeStack(props) {
       <Stack.Screen name="Edit Team" component={ EditTeam } />
       <Stack.Screen name="Teams" component={ ViewTeams } />
       <Stack.Screen name="Team Profile" component={ TeamProfile } />
+      <Stack.Screen name="Review Page" component={ ReviewPage } />
+      <Stack.Screen name="Edit Review" component={ EditReview } />
     </Stack.Navigator>
   );
 }
