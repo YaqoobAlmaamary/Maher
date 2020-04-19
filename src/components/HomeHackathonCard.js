@@ -6,77 +6,12 @@ import {getDuration} from '../../utils/helper'
 import { withFirebaseHOC } from '../../config/Firebase'
 
 class HomeHackathonCard extends Component {
-  state = {
-    type: "",
-    inTeam: false,
-    teamId: ''
-  }
-  getStatus = () => {
-    const { type } = this.state
-    const { hackathon } = this.props
 
-    if(type == 'judge'){
-      if(hackathon.reviewStatus == 'review')
-        return  {type: 'good', text: 'Review period started'}
-      else if(hackathon.reviewStatus == 'finished')
-        return {type: 'bad', text: 'Review period has finished'}
-      else {
-        return {type: 'bad', text: "Review period hasn't started yet"}
-      }
-    }
-    else if(type == 'manager'){
-      return  {type: 'good', text: hackathon.status}
-    }
-    else if(type == 'participant'){
-      const { uid } = this.props.firebase.getCurrentUser()
-      let inTeam
-      if(hackathon.teams.length == 0)
-        inTeam = false
-      else
-        inTeam = hackathon.teams.find((team) => team.members.includes(uid))
-
-      if(inTeam != null && inTeam != false){
-        if(this.state.inTeam == false)
-          this.setState({
-            inTeam: true,
-            teamId: inTeam.teamId
-          })
-
-        return {type: 'good', text: "in a team"}
-      }
-      else {
-        if(this.state.inTeam == true)
-          this.setState({inTeam: false})
-        return {type: 'bad', text: "not in a team"}
-      }
-    }
-    else {
-      return
-    }
-  }
-  isHackathonFull = () => {
-    return this.props.hackathon.teams.length == this.props.hackathon.maxTeams
-  }
-  componentDidMount(){
-    const { hackathon, firebase } = this.props
-    const { uid } = firebase.getCurrentUser()
-    if(hackathon.judges.includes(uid))
-      this.setState({
-        type: 'judge'
-      })
-    else if(hackathon.createdBy == uid)
-      this.setState({
-        type: 'manager'
-      })
-    else if(hackathon.participants.includes(uid))
-    this.setState({
-      type: 'participant'
-    })
-  }
   render() {
     const {navigation, hackathon, goToHackathon} = this.props
-    const { inTeam, type, teamId } = this.state
-    const status = this.getStatus()
+    const isHackathonFull = hackathon.isHackathonFull
+    const type = hackathon.userType
+    const status = hackathon.userStatus
     return (
       <TouchableOpacity onPress={() => goToHackathon() } style={styles.container}>
         <View style={styles.card}>
@@ -87,9 +22,17 @@ class HomeHackathonCard extends Component {
             <View style={{flex: 1}}>
               <Text style={styles.title}>{hackathon.name}</Text>
               {status != null &&
-                <Text style={[styles.status, { color: status.type == 'bad' ? '#CF6679' : '#01A299' }]}>{status.text}</Text>
+                <Text style={[styles.status, { color:
+                  status.type == 'bad' ?
+                      '#CF6679'
+                    : status.type == "good" ?
+                          '#01A299'
+                        : 'rgba(255, 255, 255, 0.6)' }]}>{status.text}</Text>
               }
-              {this.isHackathonFull() &&
+              {(status.needMoreMembers !== null && status.needMoreMembers) &&
+                <Text style={[styles.status, {color: '#CF6679' }]}>Need More Members</Text>
+              }
+              {isHackathonFull &&
                 <Text style={styles.status}>Hackathon is full</Text>
               }
             </View>
@@ -102,12 +45,12 @@ class HomeHackathonCard extends Component {
             </View>
             {type == 'participant' &&
               <View style={{justifyContent: 'flex-end'}}>
-                  {inTeam ?
-                    <MyButton text="My Team" onPress={() => navigation.navigate("Team Page", {teamId: teamId, hackathonId: hackathon.hackathonId} ) } />
+                  {status.inTeam ?
+                    <MyButton text="My Team" onPress={() => navigation.navigate("Team Page", {teamId: status.teamId, hackathonId: hackathon.hackathonId} ) } />
                   : <View>
                       <MyButton text="View Teams" onPress={() => navigation.navigate("Teams", {hackathonId: hackathon.hackathonId} ) } />
-                      {!this.isHackathonFull() &&
-                      <MyButton disabled={this.isHackathonFull()} text="Create Team" onPress={() => navigation.navigate("Create Team", {hackathonId: hackathon.hackathonId} ) } />}
+                      {!isHackathonFull &&
+                      <MyButton disabled={isHackathonFull} text="Create Team" onPress={() => navigation.navigate("Create Team", {hackathonId: hackathon.hackathonId} ) } />}
                     </View>
                   }
               </View>
