@@ -1,5 +1,5 @@
-import React, { Component } from 'react'
-import { View, TouchableOpacity, ActivityIndicator,ScrollView, Image, StyleSheet } from 'react-native'
+import React, { Component, useState } from 'react'
+import { View, TouchableOpacity, ActivityIndicator,ScrollView, Image, StyleSheet, Alert } from 'react-native'
 import { Text, Button } from 'native-base'
 import { Entypo, MaterialCommunityIcons } from '@expo/vector-icons'
 import {withFirebaseHOC} from '../../config/Firebase'
@@ -18,6 +18,8 @@ class HackathonPage extends Component {
     isUserManager: false,
     showRegisterAlert: false,
     showLeaveAlert: false,
+    showRemoveHackathonAlert: false,
+    showPublishAlert: false,
     submiting: false,
   }
 
@@ -45,6 +47,63 @@ class HackathonPage extends Component {
           submiting: false
         })
       })
+  }
+
+  publishHackathon = async () => {
+    const check = this.checkDates()
+    if(check.isError){
+      Alert.alert('Error in the dates', check.text , [{text: 'OK'}], {cancelable: true})
+      return
+    }
+    else {
+      this.setState({
+        submiting: true
+      })
+      await this.props.firebase.getHackathonDoc(this.state.hackathon.hackathonId).update({status: 'open'})
+      this.setState({
+        submiting: false,
+        showPublishAlert: false
+      })
+    }
+  }
+
+  removeHackathon = async () => {
+    this.setState({
+      submiting: true
+    })
+    await this.props.firebase.removeHackathon(this.state.hackathon.hackathonId)
+    this.setState({
+      submiting: false,
+      showRemoveHackathonAlert: false
+    })
+  }
+
+  checkDates = () => {
+    const { hackathon } = this.state
+    const { startDateTime, endDateTime, reviewStartDateTime, reviewEndDateTime } = hackathon
+    let isError, text
+    if(moment(moment(new Date())).diff(moment(startDateTime.seconds*1000)) >= 0){
+      isError = true
+      text = "Start time should be in the future"
+    }
+    else if(moment(startDateTime.seconds*1000).diff(moment(endDateTime.seconds*1000)) >= 0){
+      isError = true
+      text = "End time should be after the start time"
+    }
+    else if(moment(reviewStartDateTime.seconds*1000).diff(moment(reviewEndDateTime.seconds*1000)) >= 0){
+      isError = true
+      text = "Review end time should be after the review start time"
+    }
+    else if(moment(endDateTime.seconds*1000).diff(moment(reviewStartDateTime.seconds*1000)) >= 0){
+      isError = true
+      text = "Review start time should be after the end time"
+    }
+    else {
+      isError = false
+      text = ""
+    }
+    return {isError: isError, text: text}
+
   }
 
   leaveHackathon = async () => {
@@ -106,11 +165,16 @@ class HackathonPage extends Component {
       })
   }
 
-  addJudgeToState = async (judgeId) => {
-    const judge = await this.props.firebase.getUserDataOnce(judgeId)
-    this.setState({
-      judges: this.state.judges.concat(judge.data())
+  getJudgesData = async (hackathon) => {
+    if(hackathon.judges == null || hackathon.judges.length == 0)
+      return
+
+    const getJudgesDataPromises = hackathon.judges.map(async judgeId => {
+      const judgeDoc = await this.props.firebase.getUserDataOnce(judgeId)
+      return judgeDoc.data()
     })
+
+    return await Promise.all(getJudgesDataPromises)
   }
   async componentDidMount(){
     this.props.navigation.dangerouslyGetParent().setOptions({
@@ -118,51 +182,36 @@ class HackathonPage extends Component {
     })
     const { hackathonId } = this.props.route.params
     const { firebase } = this.props
+    const { uid } = firebase.getCurrentUser()
 
-    //Listen for hackathon updates, and assign it to unsubscribe to be called in componentWillUnmount to unsubscribe this listener
-    this.unsubscribe = firebase.hackathonDataById(hackathonId).onSnapshot((snapshot) => {
-      snapshot.docChanges().forEach((change) => { // whenever hackathon data is changed
-        this.setState({
-          hackathon: change.doc.data()
-        })
-      })
+    // Listen for hackathon updates, and assign it to unsubscribe to be called in componentWillUnmount to unsubscribe this listener
+    this.unsubscribe = await firebase.getHackathonDoc(hackathonId)
+      .onSnapshot(async (doc) => {
+        if(doc.exists){
+          const isRegistered = doc.data().participants.includes(uid)
+          const isUserManager = doc.data().createdBy == uid
+          const isUserJudge = doc.data().judges.includes(uid)
+
+          const judges = await this.getJudgesData(doc.data())
+
+          this.setState({
+            hackathon: doc.data(),
+            judges: judges == null ? [] : judges,
+            isRegistered: isRegistered,
+            isUserManager: isUserManager,
+            isUserJudge: isUserJudge,
+            isReady: true,
+            isJudgesReady: true
+          })
+        }
     })
 
     const user = await firebase.getUserDataOnce(firebase.getCurrentUser().uid)
-    const snapshot = await firebase.getHackathonDoc(hackathonId).get()
-
-    const { uid } = firebase.getCurrentUser()
-    if(snapshot.data().participants.includes(uid)){
-      this.setState({
-        isRegistered: true
-      })
-    }
-    if(snapshot.data().createdBy == uid){
-      this.setState({
-        isUserManager: true
-      })
-    }
-    if(snapshot.data().judges.includes(uid)){
-      this.setState({
-        isUserJudge: true
-      })
-    }
 
     this.setState({
-      hackathon: snapshot.data(),
       user: user.data(),
-      isReady: true
     })
 
-    if(snapshot.data().judges.length != 0){
-      const addJudgesPromises = this.state.hackathon.judges.map(this.addJudgeToState)
-
-      await Promise.all(addJudgesPromises)
-    }
-
-    this.setState({
-      isJudgesReady: true
-    })
   }
   componentWillUnmount() {
     // unsubscribe from listener only if it was defined
@@ -172,7 +221,7 @@ class HackathonPage extends Component {
   render() {
     const { hackathon, isReady, judges, isJudgesReady, isRegistered, isUserJudge, isUserManager, showRegisterAlert, showLeaveAlert, submiting } = this.state
     this.props.navigation.setOptions({
-      title: this.props.route.params.name,
+      title: hackathon.status == 'un-published' ? " Preview" : this.props.route.params.name,
       headerTitleAlign: 'center'
     })
     if(!isReady) {
@@ -180,8 +229,25 @@ class HackathonPage extends Component {
         <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
       )
     }
+    else if(hackathon.status == 'removed'){
+      return (
+        <Text style={{alignSelf: 'center', margin: 25}}>
+          This hackathon doesn't exists
+        </Text>
+      )
+    }
     return (
       <View style={{ flex: 1, alignItems: 'stretch'}}>
+        {isUserManager && hackathon.status == 'un-published' &&
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'}}>
+            <TouchableOpacity style={{alignSelf: 'center', margin: 15}}>
+              <Text style={styles.textBtn}><MaterialCommunityIcons size={18} name="square-edit-outline" />EDIT</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{alignSelf: 'center', margin: 15}} onPress={() => this.setState({showPublishAlert: true})}>
+              <Text style={[styles.textBtn, {fontFamily: 'Roboto_medium'}]}>Publish</Text>
+            </TouchableOpacity>
+          </View>
+        }
         <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: 20}}>
             {(hackathon.banner !== '' && hackathon.banner != null) &&
               <Image style={{width:340 ,height:100}} source={{uri: hackathon.banner}} />
@@ -221,7 +287,7 @@ class HackathonPage extends Component {
                 </View>
               ))
             }
-            {judges.length != 0 &&
+            {( judges.length != 0 || (judges.length == 0 && isUserManager) ) &&
               <Text style={styles.h2}>Judges</Text>
             }
             {isJudgesReady ?
@@ -236,6 +302,12 @@ class HackathonPage extends Component {
                 </View>
               ))
             : <ActivityIndicator style={{margin: 25}} size="small" color='#BB86FC' />}
+            {isUserManager && hackathon.status == 'un-published' &&
+              <TouchableOpacity onPress={() => this.props.navigation.navigate("Manage Judges", {hackathonId: hackathon.hackathonId})}
+                style={{alignSelf: 'center', margin: 15}}>
+                <Text style={styles.textBtn}>Manage Judges</Text>
+              </TouchableOpacity>
+            }
             <Text style={styles.h2}>Judging Criteria</Text>
             {hackathon.criteria.length !== 0 &&
               hackathon.criteria.map((criteria) => (
@@ -262,6 +334,13 @@ class HackathonPage extends Component {
                 ))}
               </View>
             }
+            {isUserManager && hackathon.status == 'un-published' &&
+              <View style={{margin: 20}}>
+                <TouchableOpacity style={{alignSelf: 'center'}} onPress={() => this.setState({showRemoveHackathonAlert: true})}>
+                  <Text style={[styles.textBtn, {color: '#CF6679'}]}><MaterialCommunityIcons size={18} name="delete" />Delete Hackathon</Text>
+                </TouchableOpacity>
+              </View>
+            }
         </ScrollView>
         <RegisterAlert
         submiting={submiting}
@@ -275,6 +354,18 @@ class HackathonPage extends Component {
         showAlert={showLeaveAlert}
         leave={this.leaveHackathon}
         hideAlert={() => this.setState({showLeaveAlert: false})}
+        />
+        <RemoveAlert
+        removeHackathon={this.removeHackathon}
+        submiting={submiting}
+        showAlert={this.state.showRemoveHackathonAlert}
+        hideAlert={() => this.setState({showRemoveHackathonAlert: false})}
+        />
+        <PublishAlert
+        publishHackathon={this.publishHackathon}
+        submiting={submiting}
+        showAlert={this.state.showPublishAlert}
+        hideAlert={() => this.setState({showPublishAlert: false})}
         />
       </View>
     )
@@ -348,6 +439,103 @@ function LeaveAlert({showAlert, hideAlert, leave, submiting}){
         cancelButtonTextStyle={{fontSize: 18}}
         confirmButtonTextStyle={{fontSize: 18}}
         overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+      />
+  )
+}
+function RemoveAlert({showAlert, hideAlert, removeHackathon, submiting}){
+  const [step, setStep] = useState(1)
+  if(step == 1){
+    return (
+      <AwesomeAlert
+          show={showAlert}
+          title="DELETE HACKATHON!"
+          message={"This is a critical action, All the hackathon data will be deleted permanently from the database."+"\n\nAre you sure you want to proceed?"}
+          showCancelButton={true}
+          showConfirmButton={true}
+          cancelText="Close"
+          confirmText="Proceed"
+          confirmButtonColor='#CF6679'
+          cancelButtonColor="#383838"
+          onCancelPressed={() => {
+            hideAlert()
+          }}
+          onConfirmPressed={() => {
+            setStep(2)
+          }}
+          titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+          messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+          contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+          cancelButtonTextStyle={{fontSize: 18}}
+          confirmButtonTextStyle={{fontSize: 18}}
+          overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+          onDismiss = {() => {
+            hideAlert()
+          }}
+        />
+    )
+  }
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        showProgress={submiting}
+        progressSize="large"
+        progressColor="#BB86FC"
+        title="DELETE HACKATHON!"
+        message={"Last warnning, Are you sure you want to delete the hackathon?"}
+        showCancelButton={!submiting}
+        showConfirmButton={!submiting}
+        cancelText="Close"
+        confirmText="DELETE"
+        confirmButtonColor='#CF6679'
+        cancelButtonColor="#383838"
+        onCancelPressed={() => {
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          removeHackathon()
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+        onDismiss = {() => {
+          hideAlert()
+          setStep(1)
+        }}
+      />
+  )
+}
+function PublishAlert({showAlert, hideAlert, publishHackathon, submiting}){
+  return (
+    <AwesomeAlert
+        show={showAlert}
+        showProgress={submiting}
+        progressSize="large"
+        progressColor="#BB86FC"
+        title="Publish Hackathon"
+        message={"By clicking publish, You will not be allowed to edit hackathon information. If you are waiting for a judge to accept your invitation, please wait for the response. Otherwise the judge will not be able to accept the invitation"+
+        "\n\nAre you sure you want to publish?"}
+        showCancelButton={!submiting}
+        showConfirmButton={!submiting}
+        cancelText="No, wait"
+        confirmText="Publish"
+        confirmButtonColor="#BB86FC"
+        cancelButtonColor="#383838"
+        onCancelPressed={() => {
+          hideAlert()
+        }}
+        onConfirmPressed={() => {
+          publishHackathon()
+        }}
+        titleStyle={{color: 'rgba(256,256,256,0.87)', fontSize: 21}}
+        messageStyle={{color: 'rgba(256,256,256,0.6)', fontSize: 18, lineHeight: 21, margin: 5}}
+        contentContainerStyle={{backgroundColor: '#2e2e2e', margin: 0}}
+        cancelButtonTextStyle={{fontSize: 18}}
+        confirmButtonTextStyle={{fontSize: 18}}
+        overlayStyle={{backgroundColor: 'rgba(255,255,255, 0.15)'}}
+        onDismiss={() => hideAlert()}
       />
   )
 }
@@ -441,6 +629,12 @@ const styles = StyleSheet.create({
   sponsors: {
     marginTop: 20
   },
+  textBtn: {
+    color: '#BB86FC',
+    fontSize: 17,
+    textTransform: 'uppercase',
+    letterSpacing: 1.25,
+  }
 })
 
 export default withFirebaseHOC(HackathonPage)
