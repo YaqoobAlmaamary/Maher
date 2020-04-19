@@ -12,6 +12,8 @@ import EditTeam from '../screens/EditTeam'
 import ViewTeams from '../screens/ViewTeams'
 import TeamProfile from '../screens/TeamProfile'
 import InviteToTeam from '../screens/InviteToTeam'
+import ManageJudges from '../screens/ManageJudges'
+import InviteJudge from '../screens/InviteJudge'
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
 import CreateHackathon from "../screens/CreateHackathon"
 import Evaluate from "../screens/Evaluate"
@@ -43,13 +45,45 @@ class Home extends Component {
   getSections = () => {
     let sections = []
     if(this.state.hackathonsParticipated.length > 0)
-      sections.push({ title: "Participant ", data: this.state.hackathonsParticipated })
+      sections.push({ title: "Participant", data: this.state.hackathonsParticipated })
     if(this.state.hackathonsJudged.length > 0)
-      sections.push({ title: "Judge ", data: this.state.hackathonsJudged })
+      sections.push({ title: "Judge", data: this.state.hackathonsJudged })
     if(this.state.hackathonsCreated.length > 0)
-      sections.push({ title: "Creator ", data: this.state.hackathonsCreated })
+      sections.push({ title: "Manager", data: this.state.hackathonsCreated })
 
     return sections
+  }
+
+  getParticipantStatus = (hackathon) => {
+    const { uid } = this.props.firebase.getCurrentUser()
+    let inTeam
+    if(hackathon.teams.length == 0)
+      inTeam = false
+    else
+      inTeam = hackathon.teams.find((team) => team.members.includes(uid))
+
+    if(inTeam != null && inTeam != false){
+      const needMoreM = inTeam.members.length < hackathon.minInTeam
+      return {type: 'good', text: "in a team", inTeam: true, teamId: inTeam.teamId, needMoreMembers: needMoreM }
+    }
+    else {
+      return {type: 'bad', text: "not in a team", inTeam: false}
+    }
+  }
+
+  getJudgeStatus = (hackathon) => {
+    if(hackathon.status == "un-published")
+      return {type: 'neutral', text: 'Hackathon Not published yet'}
+    else if(hackathon.reviewStatus == 'review')
+      return {type: 'good', text: 'Review period started'}
+    else if(hackathon.reviewStatus == 'finished')
+      return {type: 'bad', text: 'Review period has finished'}
+    else
+      return {type: 'bad', text: "Review period hasn't started yet"}
+  }
+
+  getManagerStatus = (hackathon) => {
+    return  {type: 'neutral', text: hackathon.status}
   }
 
   // when the component will first be rendered to the
@@ -73,7 +107,7 @@ class Home extends Component {
     // subscribe to firestore and get a snapshot of the data
     // onSnapshot first call it will read all data
     // after that it will only listen
-    this.subscription = firebase.allHackathons().where( "status", "==", "open" )
+    this.subscription = firebase.allHackathons().where( "status", "in", ["un-published", "open", "started", "in-review", "ended"] )
       .onSnapshot( (querySnapshot) => {
         // for any change check on the data
         querySnapshot.docChanges().forEach( ( change ) => {
@@ -82,18 +116,27 @@ class Home extends Component {
           var isParticipant = hackathon.participants.find( (item) => item === userId ); // is he a participant
           var isJudge = hackathon.judges.find( (item) => item === userId ); // is he a judge
           var isCreator = hackathon.createdBy === userId; // is he the creator
+
+          // add boolean object isHackathonFull to use it in HomeHackathonCard
+          hackathon["isHackathonFull"] = hackathon.teams.length == hackathon.maxTeams
+
           // added hackathon to the firestore
           if( change.type === "added" ){
             // user is participant in the current hackathon
             if( isParticipant ){
+              hackathon["isUserInTeam"] =
+              hackathon["userStatus"] = this.getParticipantStatus(hackathon)
+              hackathon["userType"] = "participant"
               buffer1.push( hackathon )
             }
             // user is a judge
             if( isJudge ){
-              buffer2.push( hackathon )
+              buffer2.push( {...hackathon, userStatus: this.getJudgeStatus(hackathon), userType: "judge"} )
             }
             // user is the creator
             if( isCreator ){
+              hackathon["userStatus"] = this.getManagerStatus(hackathon)
+              hackathon["userType"] = "manager"
               buffer3.push( hackathon )
             }
           }
@@ -101,22 +144,30 @@ class Home extends Component {
           else if( change.type === "modified" ){
 
             var filter = ( array ) => {
-              return array.filter( ( item ) => item.hackathonId !== hackathon.hackathonId )
+              return array.filter( ( item ) => item.hackathonId !== hackathon.hackathonId );
             };
             // remove the modified hackathon from the buffers
             buffer1 = filter( buffer1 );
             buffer2 = filter( buffer2 );
             buffer3 = filter( buffer3 );
+
+            // add boolean object isHackathonFull to use it in HomeHackathonCard
+            hackathon["isHackathonFull"] = hackathon.teams.length == hackathon.maxTeams;
+
             // if participant then add hackathon
             if( isParticipant ){
+              hackathon["userStatus"] = this.getParticipantStatus(hackathon);
+              hackathon["userType"] = "participant";
               buffer1.push( hackathon );
             }
             // if judge then add hackathon
             if( isJudge ){
-              buffer2.push( hackathon );
+              buffer2.push( {...hackathon, userStatus: this.getJudgeStatus(hackathon), userType: "judge"} )
             }
             // you get the point
             if( isCreator ){
+              hackathon["userStatus"] = this.getManagerStatus(hackathon);
+              hackathon["userType"] = "manager";
               buffer3.push( hackathon );
             }
           }
@@ -218,6 +269,8 @@ function HomeStack(props) {
       <Stack.Screen name="Hackathon Page" component={ HackathonPage } />
       <Stack.Screen name="Create Team" component={ CreateTeam } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
       <Stack.Screen name="Team Page" component={ TeamPage } options={{cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,}} />
+      <Stack.Screen name="Manage Judges" component={ ManageJudges } />
+      <Stack.Screen name="Invite Judge" component={ InviteJudge } />
       <Stack.Screen name="Invite To Team" component={ InviteToTeam } />
       <Stack.Screen name="Create Hackathon" component={ CreateHackathon } />
       <Stack.Screen name="Evaluate" component={ Evaluate }  />
