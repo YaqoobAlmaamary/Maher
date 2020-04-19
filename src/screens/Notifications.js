@@ -61,7 +61,40 @@ class Notifications extends Component {
     return {isTeamExists: isTeamExists ,isUserInTeam: isUserInTeam, isTeamFull: isTeamFull }
   }
 
+  acceptJudge = async (notification) => {
+    // optimistic update, (means suppose the happy scenario will happen, if not return to the original state )
+    this.setState({
+      selectedNotification: notification,
+      notifications: this.state.notifications.filter((n) => n.notificationId != notification.notificationId)
+    })
+    const snapshot = await this.props.firebase.getHackathonDoc(notification.hackathonId).get()
+    const hackathon = snapshot.data()
+    const { uid } = this.props.firebase.getCurrentUser()
+
+    if(hackathon.status == 'removed' || hackathon == null){
+      this.toast.current.show("Sorry, The hackathon doesn't exists", 1500)
+      await this.discard(notification)
+    }
+    else if(hackathon.status != "un-published"){
+      this.toast.current.show("Sorry, The hackathon already started", 1500)
+      await this.discard(notification)
+    }
+    else if(hackathon.judges.includes(uid)){
+      this.toast.current.show("You are already in the judges list", 1500)
+      await this.discard(notification)
+    }
+    else {
+      this.toast.current.show("You've been added successfully", 1500)
+      await this.props.firebase.addJudge(hackathon.hackathonId, uid)
+      await this.discard(notification)
+    }
+  }
+
   accept = async (notification) => {
+    if(notification.type == 'review')
+      return this.acceptJudge(notification)
+
+
     // optimistic update, (means suppose the happy scenario will happen, if not return to the original state )
     this.setState({
       selectedNotification: notification,
@@ -120,11 +153,9 @@ class Notifications extends Component {
     this.props.firebase.database().ref('notifications/'+this.props.firebase.getCurrentUser().uid+"/"+notification.notificationId)
       .remove()
         .catch(() => {
-          const tempNotificationsArray = this.state.notifications
-          tempNotificationsArray.unshift(notification)
-
+          // return the deleted notification to the state
           this.setState({
-            notifications: tempNotificationsArray
+            notifications: this.state.notifications.concat(notification).sort((a, b) => (b.time - a.time))
           })
         })
   }
@@ -217,6 +248,12 @@ class NotificationCard extends Component {
       this.setState({
         title: "Joining Team Request!",
         message: `${notification.fromFullName} is requesting to join your ${notification.teamName} in ${notification.hackathonName}`
+      })
+    }
+    else if(notification.type == 'review'){
+      this.setState({
+        title: "Reviewer Invitation!",
+        message: `${notification.fromFullName} invites you to be one of the judges in ${notification.hackathonName}`
       })
     }
   }
