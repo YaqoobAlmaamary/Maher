@@ -31,6 +31,12 @@ const Firebase = {
   },
 
   // firestore
+  usersCollection: () => {
+    return firebase
+      .firestore()
+      .collection('users')
+  },
+
   createNewUser: userData => {
     return firebase
       .firestore()
@@ -92,6 +98,65 @@ const Firebase = {
       .doc(hackathonId)
       .collection('teams')
       .doc(teamId)
+  },
+
+  removeHackathon: async (hackathonId) => {
+    const hackathonRef = firebase.firestore().collection('hackathons').doc(hackathonId)
+    const hackathonDoc = await hackathonRef.get()
+    const listJudges = hackathonDoc.data().judges
+    const participants = hackathonDoc.data().participants
+
+    let promises = []
+    // update hackathon document
+    hackathonRef.update({
+      status: 'removed',
+      judges: [],
+      teams: [],
+      participants: []
+    })
+    // remove the hackathon from hackathons array for each judge
+    if(listJudges.length > 0){
+      const removeJudgesPromises = listJudges.map((judgeId) => {
+          return firebase.firestore().collection('users').doc(judgeId).update({
+          hackathons: firebase.firestore.FieldValue.arrayRemove({role: 'judge', hackathonId: hackathonDoc.data().hackathonId})
+        })
+      })
+      await Promise.all(removeJudgesPromises)
+    }
+    // remove the hackathon from hackathons array for each participant
+    if(participants.length > 0){
+      const removeParticipantsPromises = participants.map((pId) => {
+          return firebase.firestore().collection('users').doc(pId).update({
+          hackathons: firebase.firestore.FieldValue.arrayRemove({role: 'participant', hackathonId: hackathonDoc.data().hackathonId})
+        })
+      })
+      await Promise.all(removeParticipantsPromises)
+    }
+    // remove the hackathon from hackathons array for the manager
+    await firebase.firestore().collection('users').doc(hackathonDoc.data().createdBy).update({
+      hackathons: firebase.firestore.FieldValue.arrayRemove({role: 'manager', hackathonId: hackathonDoc.data().hackathonId})
+    })
+    // remove all notifications related to this hackathon
+    const notifications = await firebase.database().ref('notifications/').once('value')
+    if(notifications != null){
+      const notificationsArray = Object.values(notifications.val())
+      let paths = []
+
+      notificationsArray.map(n => {
+        Object.values(n).map(userNotification => {
+          if(userNotification.hackathonId == hackathonId)
+            paths.push(userNotification.to+"/"+userNotification.notificationId)
+        })
+      })
+
+      const removeNotificationsPromises = paths.map(path => {
+        return firebase.database().ref('notifications/'+path).remove()
+      })
+
+      await Promise.all(removeNotificationsPromises)
+
+    }
+
   },
 
   createNewTeam: async (hackathonId, teamData, uid) => {
@@ -174,7 +239,7 @@ const Firebase = {
             : firebase.firestore.FieldValue.arrayRemove({type: 'participant', uid: uid})
       })
   },
-  
+
   removeTeam: async (hackathonId, teamId, members) => {
     await firebase
       .firestore()
@@ -191,6 +256,48 @@ const Firebase = {
       .update({
         teams: firebase.firestore.FieldValue.arrayRemove({teamId: teamId, members: members})
       })
+  },
+
+  addJudge: async (hackathonId, uid) => {
+    // update judge array in hackathon doc
+    await firebase
+    .firestore()
+    .collection('hackathons')
+    .doc(hackathonId)
+    .update({
+      judges: firebase.firestore.FieldValue.arrayUnion(uid)
+    })
+
+    // update hackathons array in user doc
+    await firebase
+    .firestore()
+    .collection('users')
+    .doc(uid)
+    .update({
+      hackathons: firebase.firestore.FieldValue.arrayUnion({role: 'judge', hackathonId: hackathonId})
+    })
+
+  },
+
+  removeJudge: async (hackathonId, uid) => {
+    // update judge array in hackathon doc
+    await firebase
+    .firestore()
+    .collection('hackathons')
+    .doc(hackathonId)
+    .update({
+      judges: firebase.firestore.FieldValue.arrayRemove(uid)
+    })
+
+    // update hackathons array in user doc
+    await firebase
+    .firestore()
+    .collection('users')
+    .doc(uid)
+    .update({
+      hackathons: firebase.firestore.FieldValue.arrayRemove({role: 'judge', hackathonId: hackathonId})
+    })
+
   },
 
   // real-time database
