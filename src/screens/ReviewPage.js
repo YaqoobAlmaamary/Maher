@@ -64,10 +64,10 @@ class ReviewPage extends Component {
     const teamRef = this.props.firebase.getTeamDoc(hackathonId, teamId)
     const teamDoc = await teamRef.get()
     const prevReviews = teamDoc.data().reviews
-
+    
     let updatedData = {}
 
-    if(prevReviews === null)
+    if(prevReviews == null)
       updatedData[uid] = toSubmit
     else {
       prevReviews[uid] = toSubmit
