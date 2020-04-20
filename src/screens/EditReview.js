@@ -1,7 +1,10 @@
 import React, {Component } from 'react'
-import { View, StyleSheet, Image, TouchableOpacity , SectionList , ScrollView } from 'react-native'
+import { View, StyleSheet , ScrollView , ActivityIndicator , FlatList} from 'react-native'
 import { Text, Button } from 'native-base'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { MaterialCommunityIcons, FontAwesome, Ionicons, Entypo } from '@expo/vector-icons'
+import { TextInputWithMsg, TextArea } from '../components/Inputs';
+import { Form , H3 } from 'native-base';
 import {getDuration} from '../../utils/helper'
 import { withFirebaseHOC } from '../../config/Firebase'
 
@@ -9,18 +12,163 @@ import { withFirebaseHOC } from '../../config/Firebase'
 
 class EditReview extends Component {
 
-
-  render(){
-    return(
-
-      <View>
-      <Text> Edit Review Page </Text>
-      </View>
-    )
+  state = {
+    criteria : [],
+    value : "",
+    valueError: "",
+    toSubmit: null,
+    isSubmiting: false,
+    isReady: false,
   }
+
+  handleReviewChange = (c, input) => {
+
+    let toSubmit = this.state.toSubmit
+    const number = input === "" ? '' : parseInt(input)
+    const prevNumber = toSubmit.review[c.criteriaId].value
+
+    toSubmit.review[c.criteriaId] = {
+      criteriaId: c.criteriaId,
+      value: (isNaN(number) || number > 100) ? prevNumber : number,
+      weight: c.weight
+    }
+
+    this.setState({
+      toSubmit: toSubmit
+    })
+
+  }
+
+  isThereEmpty = () => {
+    const { toSubmit } = this.state
+    let isEmpty = false
+
+    if(toSubmit == null)
+      isEmpty = true
+    else {
+
+      Object.values(toSubmit.review).map(c => {
+        if(c.value === null || c.value === '')
+          isEmpty = true
+      })
+    }
+    return isEmpty
+
+  }
+
+  editReview = async () => {
+    this.setState({isSubmiting: true})
+    const { uid } = this.props.firebase.getCurrentUser()
+    const { teamId , hackathonId } = this.props.route.params
+    const teamRef = this.props.firebase.getTeamDoc(hackathonId, teamId)
+    const teamDoc = await teamRef.get()
+    const { toSubmit } = this.state
+    const prevReviews = teamDoc.data().reviews
+
+    let updatedData = {}
+
+    if(prevReviews === null)
+      updatedData[uid] = toSubmit
+    else {
+      prevReviews[uid] = toSubmit
+      updatedData = prevReviews
+    }
+
+    await teamRef.update({reviews: updatedData})
+    this.props.navigation.goBack()
+  }
+
+ async componentDidMount(){
+  const { uid } = this.props.firebase.getCurrentUser()
+  const { teamId , hackathonId, teamName } = this.props.route.params
+  const hackathonDoc = await this.props.firebase.getHackathonDoc(hackathonId).get()
+  const teamDoc = await this.props.firebase.getTeamDoc(hackathonId, teamId).get()
+  const userReview = teamDoc.data().reviews[uid]
+
+  let toSubmit = userReview
+
+
+  this.setState({
+    criteria: hackathonDoc.data().criteria,
+    toSubmit: toSubmit,
+    isReady: true
+  })
+
+  this.props.navigation.setOptions({
+    title: "Edit "+teamName+" Review",
+    headerTitleAlign: 'center'
+  })
 
 
 }
 
+  render (){
+    const { criteria, toSubmit, isSubmiting, isReady } = this.state
+    if(!isReady){
+      return (
+        <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
+      )
+    }
+    if(criteria.length === 0)
+      return null
+    return (
+      <KeyboardAwareScrollView>
+        {criteria.map( (item) => (
+          <ReviewInput
+            key={item.criteriaId}
+            criteria={item}
+            handleReviewChange={this.handleReviewChange}
+            value={toSubmit == null ? "" : toSubmit.review[item.criteriaId].value} />
+        ))
+        }
+        {isSubmiting ?
+          <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
+        : <Button style={styles.btn} onPress={this.editReview} disabled={this.isThereEmpty()}>
+            <Text style={styles.btnText}>Edit Review</Text>
+          </Button>
+        }
+      </KeyboardAwareScrollView>
+    )
+  }
+}
+
+function ReviewInput({criteria, handleReviewChange, value}){
+  return (
+      <Form>
+        <Text style={styles.label}>{criteria.name}</Text>
+        <TextInputWithMsg
+          keyboardType={"numeric"}
+          label={"Out of 100"}
+          value={ value === null ? "" : value.toString() }
+          onChangeText={(number) => handleReviewChange(criteria, number)}
+          maxLength={3}
+        />
+      </Form>
+  )
+}
+
+const styles = StyleSheet.create({
+
+  label: {
+    marginTop: 15,
+    marginLeft: 15,
+    marginBottom: 5
+  },
+  btn: {
+    alignSelf: 'center',
+    justifyContent:'center',
+    borderRadius: 5,
+    margin: 15,
+    paddingRight: 15,
+    paddingLeft: 15
+  },
+  btnText: {
+    color: '#1e1e1e',
+    fontWeight: 'bold',
+    fontSize: 14,
+    letterSpacing: 1.25,
+    textTransform: 'uppercase'
+  },
+})
 
 export default withFirebaseHOC( EditReview );
