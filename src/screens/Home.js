@@ -220,8 +220,12 @@ class Home extends Component {
     }
     else if(this.getSections().length == 0){
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', margin: 50 }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }}>
           <Text style={styles.noHackathonMsg}>You don't have any upcoming hackathons</Text>
+          
+          <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate("Create Hackathon") }>
+            <MaterialCommunityIcons size={27} name="plus" />
+          </TouchableOpacity>
         </View>
       )
     }
