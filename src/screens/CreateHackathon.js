@@ -26,7 +26,7 @@ class CreateHackathon extends React.Component{
             endTime: new Date(),
             banner: "",
             prizes: [],
-            
+            currency: "",
         }
         // not in state to avoid unnecessary properties
         this.prizePositionCounter = 0;
@@ -367,13 +367,26 @@ class CreateHackathon extends React.Component{
                 
 
                     {/**button to add banner ======================================================*/}
-                    <Image source={ this.state.banner } />
-                    <TouchableOpacity style={ styles.btn } onPress={ () => this.addBanner() }>
+                    <View style={ { justifyContent: "center", alignItems: "center" } }>
+                        <Image source={ this.state.banner } />
+                    </View>
+                    
+                    <TouchableOpacity style={ styles.bannerBtn } onPress={ () => this.addBanner() }>
                         <Text style={ styles.btnText } >Add Banner</Text>
                     </TouchableOpacity>
                     
                     {/**List of Prizes*/}
-                    <H3>Prizes</H3>
+                    <H3 style={ styles.label }>Currency used in all the prices</H3>
+                    <TextInputWithMsg 
+                        label="Currency"
+                        value={ this.state.currency }
+                        onChangeText={ (data) => {
+                            this.setState( () => ({ currency: data }) )
+                        }}
+
+                    />
+
+                    <H3 style={ styles.label }>Prizes</H3>
                     <FlatList
                     data={ this.state.prizes } 
                     renderItem={ ({item}) =>
@@ -382,31 +395,31 @@ class CreateHackathon extends React.Component{
                             <H3 style={ styles.label }>Prize in position { item.position }</H3>
                             <H3 style={ styles.label }>Type of the prize (for example cash or material possession like fridge or TV)</H3>
                             <TextInputWithMsg
-                            label="Type"
-                            value={ item.type }
-                            onChangeText={ (type) => {
-                                item.type = type
-                                this.add_item_to_prizes( item )
-                            }}
+                                label="Type"
+                                value={ item.type }
+                                onChangeText={ (type) => {
+                                    item.type = type
+                                    this.add_item_to_prizes( item )
+                                }}
                             />
 
                             <H3 style={ styles.label }>Value (how much is the price worth)</H3>
                             <TextInputWithMsg 
-                            label="value"
-                            value={ item.value }
-                            onChangeText={ (value) => {
-                                item.value = value
-                                this.add_item_to_prizes( item )
-                            }}
+                                label="value"
+                                value={ item.value }
+                                onChangeText={ (value) => {
+                                    item.value = value
+                                    this.add_item_to_prizes( item )
+                                }}
                             />
 
                             <H3 style={ styles.label } > Description</H3>
                             <TextInputWithMsg
-                            label="describe the prize"
-                            value={ item.desc }
-                            onChangeText={ (desc) => {
-                                item.desc = desc
-                                this.add_item_to_prizes( item )
+                                label="describe the prize"
+                                value={ item.desc }
+                                onChangeText={ (desc) => {
+                                    item.desc = desc
+                                    this.add_item_to_prizes( item )
                             }}
                             />
 
@@ -470,6 +483,15 @@ const styles = StyleSheet.create({
         color: "red",
         padding: 10, 
     },
+    bannerBtn: {
+        borderWidth: 1,
+        borderRadius: 10,
+        borderColor: "#f0b129",
+        padding: 10,
+        alignSelf: 'center',
+        justifyContent:'center',
+        margin: 10,
+    }
 
   })
 
