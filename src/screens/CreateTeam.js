@@ -62,6 +62,7 @@ class CreateTeam extends Component {
               value={name}
               error={nameError}
               onChangeText={(name) => {
+                if( name.length <= 15 )
                   this.setState({
                     name,
                     nameError: ''
@@ -71,7 +72,11 @@ class CreateTeam extends Component {
             <TextInputWithMsg
               label="What's your idea?"
               value={mainIdea}
-              onChangeText={(mainIdea) => this.setState({mainIdea})} />
+              onChangeText={(mainIdea) => { 
+                console.log( mainIdea )
+                if( mainIdea.length <= 30 )
+                  this.setState({mainIdea}) 
+              }}/>
             <H3 style={styles.label}>Description of the idea</H3>
             <TextArea
               rowSpan={4}
@@ -82,7 +87,10 @@ class CreateTeam extends Component {
             <TextInputWithMsg
               placeholder="I need to..."
               value={needTo}
-              onChangeText={(needTo) => this.setState({needTo})}/>
+              onChangeText={(needTo) =>{ 
+                if( needTo.lenght <= 50 )
+                  this.setState({needTo})
+              }}/>
             {submiting ?
               <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
             : <Button style={styles.btn} onPress={this.createTeam}>
