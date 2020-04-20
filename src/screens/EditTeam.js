@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { View, KeyboardAvoidingView, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native'
+import { View, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { Form, Item as FormItem, Label, Button, Input, Text, H3, Textarea } from 'native-base'
 import { TextInputWithMsg, TextArea } from '../components/Inputs'
 import { withFirebaseHOC } from '../../config/Firebase'
@@ -61,45 +62,43 @@ class CreateTeam extends Component {
       )
     }
     return (
-        <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : ""}>
-          <ScrollView>
-            <Form>
-              <H3 style={styles.label}>Team Name*</H3>
-              <TextInputWithMsg
-                label="Team Name"
-                value={name}
-                error={nameError}
-                onChangeText={(name) => {
-                    this.setState({
-                      name,
-                      nameError: ''
-                    })
-                  }} />
-              <H3 style={styles.label}>Main Idea</H3>
-              <TextInputWithMsg
-                label="What's your idea?"
-                value={mainIdea}
-                onChangeText={(mainIdea) => this.setState({mainIdea})} />
-              <H3 style={styles.label}>Description of the idea</H3>
-              <TextArea
-                rowSpan={4}
-                placeholder="A description of the idea"
-                value={ideaDescription}
-                onChangeText={(ideaDescription) => this.setState({ideaDescription})} />
-              <H3 style={styles.label}>Skills required</H3>
-              <TextInputWithMsg
-                placeholder="I need to..."
-                value={needTo}
-                onChangeText={(needTo) => this.setState({needTo})}/>
-              {submiting ?
-                <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
-              : <Button style={styles.btn} onPress={this.update}>
-                  <Text style={styles.btnText}>update</Text>
-                </Button>
-              }
-            </Form>
-          </ScrollView>
-        </KeyboardAvoidingView>
+        <KeyboardAwareScrollView>
+          <Form>
+            <H3 style={styles.label}>Team Name*</H3>
+            <TextInputWithMsg
+              label="Team Name"
+              value={name}
+              error={nameError}
+              onChangeText={(name) => {
+                  this.setState({
+                    name,
+                    nameError: ''
+                  })
+                }} />
+            <H3 style={styles.label}>Main Idea</H3>
+            <TextInputWithMsg
+              label="What's your idea?"
+              value={mainIdea}
+              onChangeText={(mainIdea) => this.setState({mainIdea})} />
+            <H3 style={styles.label}>Description of the idea</H3>
+            <TextArea
+              rowSpan={4}
+              placeholder="A description of the idea"
+              value={ideaDescription}
+              onChangeText={(ideaDescription) => this.setState({ideaDescription})} />
+            <H3 style={styles.label}>Skills required</H3>
+            <TextInputWithMsg
+              placeholder="I need to..."
+              value={needTo}
+              onChangeText={(needTo) => this.setState({needTo})}/>
+            {submiting ?
+              <ActivityIndicator style={{margin: 25}} size="large" color='#BB86FC' />
+            : <Button style={styles.btn} onPress={this.update}>
+                <Text style={styles.btnText}>update</Text>
+              </Button>
+            }
+          </Form>
+        </KeyboardAwareScrollView>
     )
   }
 }

@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 15,
     marginLeft: 15,
+    marginRight: 15,
     marginBottom: 5
   },
   btn: {

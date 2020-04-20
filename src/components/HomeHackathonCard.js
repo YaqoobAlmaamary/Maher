@@ -43,7 +43,7 @@ class HomeHackathonCard extends Component {
               <Text style={styles.info}><MaterialCommunityIcons size={16} name="clock-outline" /> {getDuration(hackathon.startDateTime.seconds,hackathon.endDateTime.seconds)}</Text>
               <Text style={styles.location}><Entypo size={18} name="location-pin" />{hackathon.locationAddress}</Text>
             </View>
-            {type == 'participant' &&
+            {(type == 'participant' && hackathon.status === 'open') &&
               <View style={{justifyContent: 'flex-end'}}>
                   {status.inTeam ?
                     <MyButton text="My Team" onPress={() => navigation.navigate("Team Page", {teamId: status.teamId, hackathonId: hackathon.hackathonId} ) } />

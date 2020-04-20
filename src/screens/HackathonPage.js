@@ -253,9 +253,9 @@ class HackathonPage extends Component {
               <Image style={{width:340 ,height:100}} source={{uri: hackathon.banner}} />
             }
             <View style={{alignItems: 'center', marginTop: 10}}>
-              <Text style={styles.h3}>Start</Text>
+              <Text style={styles.h3}>Hackathon Starts in</Text>
               <Text style={styles.point}>{moment(hackathon.startDateTime.seconds*1000).format("LLL")}</Text>
-              <Text style={styles.h3}>End</Text>
+              <Text style={styles.h3}>Hackathon End</Text>
               <Text style={styles.point}>{moment(hackathon.endDateTime.seconds*1000).format("LLL")}</Text>
             </View>
             {isUserManager ?
@@ -271,6 +271,12 @@ class HackathonPage extends Component {
                   <Text style={styles.btnText}>Register for this hackathon</Text>
                 </Button>
             }
+            <View style={{alignItems: 'center', marginTop: 10}}>
+              <Text style={styles.h3}>Review Start in</Text>
+              <Text style={styles.point}>{moment(hackathon.reviewStartDateTime.seconds*1000).format("LLL")}</Text>
+              <Text style={styles.h3}>Review End</Text>
+              <Text style={styles.point}>{moment(hackathon.reviewEndDateTime.seconds*1000).format("LLL")}</Text>
+            </View>
             <Text style={styles.locationLink}><Entypo size={16} name="location-pin" />{hackathon.locationAddress}</Text>
             <Text style={styles.title}>{hackathon.name}</Text>
             <Text style={styles.description}>{hackathon.description}</Text>

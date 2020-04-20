@@ -62,7 +62,10 @@ class Home extends Component {
     else
       inTeam = hackathon.teams.find((team) => team.members.includes(uid))
 
-    if(inTeam != null && inTeam != false){
+    if(hackathon.status !== 'open'){
+      return  {type: 'neutral', text: hackathon.status}
+    }
+    else if(inTeam != null && inTeam != false){
       const needMoreM = inTeam.members.length < hackathon.minInTeam
       return {type: 'good', text: "in a team", inTeam: true, teamId: inTeam.teamId, needMoreMembers: needMoreM }
     }
