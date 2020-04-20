@@ -3,7 +3,8 @@ import { View, StyleSheet } from 'react-native'
 import { Item as FormItem, Label, Input, Text, Textarea } from 'native-base'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
-export function TextInputWithMsg({autoFocus, value, label, placeholder, onChangeText, error, success, onSubmitEditing, returnKeyType, blurOnSubmit}){
+export function TextInputWithMsg({autoFocus, value, label, placeholder, onChangeText, error, success,
+  onSubmitEditing, returnKeyType, blurOnSubmit, keyboardType, maxLength}){
   const [isFocused, setIsFocused] = useState(false)
   return (
     <View>
@@ -20,6 +21,8 @@ export function TextInputWithMsg({autoFocus, value, label, placeholder, onChange
         <Input placeholder={placeholder}
         style={styles.textInput}
         value={value}
+        keyboardType={keyboardType === null ? "default" : keyboardType}
+        maxLength={maxLength === null ? 300 : maxLength}
         autoFocus={autoFocus}
         blurOnSubmit={blurOnSubmit}
         onChangeText={onChangeText}
