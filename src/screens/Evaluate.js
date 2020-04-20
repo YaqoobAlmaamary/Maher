@@ -23,46 +23,53 @@ class Evaluate extends Component {
     const { hackathonId } = this.props.route.params
     const { uid }  = this.props.firebase.getCurrentUser()
     const hackathonCollection = await this.props.firebase.getHackathonDoc(hackathonId).get()
-    //this.props.firebase.hackathonDataById(hackathonId).get()
-    const teamsCollection = await this.props.firebase.getAllTeamsRef(hackathonId).get()
-    let reviewed = []
-    let notReviewed = []
+    const teamsCollection = await this.props.firebase.getAllTeamsRef(hackathonId)
 
 
+    this.teamListener = teamsCollection.onSnapshot((querysnapshot) => {
+      let reviewed = []
+      let notReviewed = []
 
-    teamsCollection.forEach( (team) => {
-      const teamData = team.data()
-      teamData['maxTeams'] = hackathonCollection.data().maxInTeam
-      //if no one reviewed the team before
-      if(teamData.reviews == null ){
-        teamData['isReviewed'] = false
-        notReviewed = notReviewed.concat(teamData)
-      }
-      else {
-        const reviewJudges = Object.keys(team.data().reviews)
-        if(reviewJudges.includes(uid)){
-          teamData['isReviewed'] = true
-
-          reviewed = reviewed.concat(teamData)
-        }else {
+      querysnapshot.forEach( (team) => {
+        const teamData = team.data()
+        teamData['maxTeams'] = hackathonCollection.data().maxInTeam
+        //if no one reviewed the team before
+        if(teamData.reviews == null ){
           teamData['isReviewed'] = false
           notReviewed = notReviewed.concat(teamData)
-
         }
-      }
+        else {
+          const reviewJudges = Object.keys(team.data().reviews)
+          if(reviewJudges.includes(uid)){
+            teamData['isReviewed'] = true
 
-     })
+            reviewed = reviewed.concat(teamData)
+          }else {
+            teamData['isReviewed'] = false
+            notReviewed = notReviewed.concat(teamData)
 
-      this.setState( {
-        reviewed : reviewed ,
-        notReviewed : notReviewed,
-        isTeamsReady: true
-      })
+          }
+        }
+
+       })
+
+        this.setState( {
+          reviewed : reviewed ,
+          notReviewed : notReviewed,
+          isTeamsReady: true
+        })
+    })
+
+    this.props.navigation.setOptions({
+      title: hackathonCollection.data().name,
+      headerTitleAlign: 'center'
+    })
 
   }
-
-
-
+  componentWillUnmount(){
+    if(this.teamListener)
+      this.teamListener()
+  }
     render() {
       const { reviewed , notReviewed  } = this.state
 
@@ -106,35 +113,31 @@ function TeamCard ( { team , navigation } ) {
 
 
   return(
-    <TouchableOpacity  style={styles.container}>
-    <View style={styles.card}>
-    <View style={styles.row}>
-    <View style={{flex: 1}}>
-    <View style={{margin : 5}}>
-    <Text style={styles.title} > {team.name} </Text>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <View style={styles.row}>
+          <View style={{flex: 1}}>
+            <View style={{margin : 5}}>
+              <Text style={styles.title} > {team.name} </Text>
+            </View>
+            <View style={{flexDirection: 'row', margin: 5}}>
+              <Text style={{ color: "#898989" }} > {"Idea: "} </Text>
+              <Text style={{fontWeight: "bold", }}> {team.mainIdea} </Text>
+            </View>
+            <View style={{margin : 5}}>
+              <Text style={{color: "#898989" , fontWeight: "bold"}} > {"Members: " + team.members.length + "/" + team.maxTeams } </Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.row , {flexDirection: 'row-reverse'}}>
+          { team.isReviewed ?
+            <MyButton text="edit review" onPress={() => navigation.navigate("Edit Review", {hackathonId: team.hackathonId , teamId: team.teamId, teamName: team.name }) } />
+          : <MyButton text="review" onPress={() => navigation.navigate("Review Page" , {hackathonId: team.hackathonId , teamId: team.teamId, teamName: team.name })  } />
+          }
+          <MyButton text="profile" onPress={() => navigation.navigate("Team Profile", {hackathonId: team.hackathonId , teamId: team.teamId }) } />
+        </View>
+      </View>
     </View>
-    <View style={{flexDirection: 'row', margin: 5}}>
-    <Text style={{ color: "#898989" }} > {"Idea: "} </Text>
-    <Text style={{fontWeight: "bold", }}> {team.mainIdea} </Text>
-    </View>
-    <View style={{margin : 5}}>
-    <Text style={{color: "#898989" , fontWeight: "bold"}} > {"Members: " + team.members.length + "/" + team.maxTeams } </Text>
-    </View>
-    </View>
-    </View>
-    <View style={styles.row , {flexDirection: 'row-reverse'}}>
-
-      { team.isReviewed ?
-        <MyButton text="edit review" onPress={() => navigation.navigate("Edit Review", {hackathonId: team.hackathonId , teamId: team.teamId }) } />
-      : <MyButton text="review" onPress={() => navigation.navigate("Review Page" , {hackathonId: team.hackathonId , teamId: team.teamId })  } />
-
-    }
-
-      <MyButton text="profile" onPress={() => navigation.navigate("Team Profile", {hackathonId: team.hackathonId , teamId: team.teamId }) } />
-
-    </View>
-    </View>
-    </TouchableOpacity>
    )
 }
 
