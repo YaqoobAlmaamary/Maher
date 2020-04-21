@@ -32,7 +32,7 @@ function HackathonCard({hackathon, goToHackathon}) {
             <Text style={styles.info}><Ionicons size={16} name="md-people" /> {hackathon.participants.length} participants</Text>
           </View>
           <View style={{justifyContent: 'flex-end'}}>
-            <Text style={styles.location}><Entypo size={16} name="location-pin" />{hackathon.locationAddress}</Text>
+            <Text style={styles.location}><Entypo size={16} name="location-pin" />{hackathon.city}</Text>
           </View>
         </View>
       </View>

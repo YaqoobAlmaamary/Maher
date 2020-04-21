@@ -41,7 +41,7 @@ class HomeHackathonCard extends Component {
             <View style={{flex: 1,justifyContent: 'flex-end'}}>
               <Text style={styles.info}><MaterialCommunityIcons size={16} name="account-group" /> {hackathon.teams.length}/{hackathon.maxTeams} teams</Text>
               <Text style={styles.info}><MaterialCommunityIcons size={16} name="clock-outline" /> {getDuration(hackathon.startDateTime.seconds,hackathon.endDateTime.seconds)}</Text>
-              <Text style={styles.location}><Entypo size={18} name="location-pin" />{hackathon.locationAddress}</Text>
+              <Text style={styles.location}><Entypo size={18} name="location-pin" />{hackathon.city}</Text>
             </View>
             {(type == 'participant' && hackathon.status === 'open') &&
               <View style={{justifyContent: 'flex-end'}}>

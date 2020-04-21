@@ -277,7 +277,7 @@ class HackathonPage extends Component {
               <Text style={styles.h3}>Review End</Text>
               <Text style={styles.point}>{moment(hackathon.reviewEndDateTime.seconds*1000).format("LLL")}</Text>
             </View>
-            <Text style={styles.locationLink}><Entypo size={16} name="location-pin" />{hackathon.locationAddress}</Text>
+            <Text style={styles.locationLink}><Entypo size={16} name="location-pin" />{hackathon.city}</Text>
             <Text style={styles.title}>{hackathon.name}</Text>
             <Text style={styles.description}>{hackathon.description}</Text>
             {(hackathon.prizes != null && Object.values(hackathon.prizes).length != 0) &&
@@ -314,15 +314,18 @@ class HackathonPage extends Component {
                 <Text style={styles.textBtn}>Manage Judges</Text>
               </TouchableOpacity>
             }
-            <Text style={styles.h2}>Judging Criteria</Text>
             {hackathon.criteria.length !== 0 &&
-              hackathon.criteria.map((criteria) => (
-                <View key={criteria.name} style={styles.headersContainer}>
-                  <Text style={styles.h3}>- {criteria.name}</Text>
-                  {criteria.description !== '' &&
-                    <Text style={styles.smallDescription}>{criteria.description}</Text>}
-                </View>
-              ))}
+              <View>
+                <Text style={styles.h2}>Judging Criteria</Text>
+                {hackathon.criteria.map((criteria) => (
+                    <View key={criteria.name} style={styles.headersContainer}>
+                      <Text style={styles.h3}>- {criteria.name}</Text>
+                      {criteria.description !== '' &&
+                        <Text style={styles.smallDescription}>{criteria.description}</Text>}
+                    </View>
+                  ))}
+              </View>
+            }
             <View>
               {hackathon.rules.length != 0 &&
                 <Text style={styles.h2}>Rules</Text>}
