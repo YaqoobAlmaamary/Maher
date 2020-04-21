@@ -16,6 +16,7 @@ import ManageJudges from '../screens/ManageJudges'
 import InviteJudge from '../screens/InviteJudge'
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
 import CreateHackathon from "../screens/CreateHackathon"
+import EditHackathon from "../screens/EditHackathon"
 import Evaluate from "../screens/Evaluate"
 import ReviewPage from "../screens/ReviewPage"
 import EditReview from "../screens/EditReview"
@@ -222,7 +223,7 @@ class Home extends Component {
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }}>
           <Text style={styles.noHackathonMsg}>You don't have any upcoming hackathons</Text>
-          
+
           <TouchableOpacity style={ styles.button } onPress={ () => this.props.navigation.navigate("Create Hackathon") }>
             <MaterialCommunityIcons size={27} name="plus" />
           </TouchableOpacity>
@@ -280,6 +281,7 @@ function HomeStack(props) {
       <Stack.Screen name="Invite Judge" component={ InviteJudge } />
       <Stack.Screen name="Invite To Team" component={ InviteToTeam } />
       <Stack.Screen name="Create Hackathon" component={ CreateHackathon } />
+      <Stack.Screen name="Edit Hackathon" component={ EditHackathon } />
       <Stack.Screen name="Evaluate" component={ Evaluate }  />
       <Stack.Screen name="Edit Team" component={ EditTeam } />
       <Stack.Screen name="Teams" component={ ViewTeams } />
