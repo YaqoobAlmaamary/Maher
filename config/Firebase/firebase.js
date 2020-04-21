@@ -126,6 +126,7 @@ const Firebase = {
     // update hackathon document
     hackathonRef.update({
       status: 'removed',
+      reviewStatus: "not-started",
       judges: [],
       teams: [],
       participants: []
