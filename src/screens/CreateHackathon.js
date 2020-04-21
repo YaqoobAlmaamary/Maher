@@ -104,6 +104,7 @@ class CreateHackathon extends React.Component{
         participants: [],
         teams: [],
         rules: [],
+        reviewStatus: "not-started",
         status: "un-published"
       }
 
