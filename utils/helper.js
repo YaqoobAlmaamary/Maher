@@ -105,17 +105,31 @@ export const checkHackathon = (hackathon) => {
     isError = true
     text = validateDates.text
   }
+  else if(hackathon.criteria.length === 0){
+    isError = true
+    text = "Please add at least one criterion"
+  }
   else if(hackathon.criteria.length !== 0){
+    let totalWeights = 0
     hackathon.criteria.map((c, i) => {
       if(c.name.trim() === ""){
         isError = true
         text = `Criterion number ${i+1} missing the name`
+        totalWeights += parseFloat(c.weight)
       }
       else if(c.weight.trim() === "" || isNaN(c.weight)){
         isError = true
         text = isNaN(c.weight) ? `Criterion number ${i+1} weight have invalid value, it should be a number ` : `Criterion number ${i+1} missing the weight`
       }
+      else {
+        totalWeights += parseFloat(c.weight)
+      }
     })
+
+    if(totalWeights != 100 && !isNaN(totalWeights)){
+      isError = true
+      text = `The total criteria weights expect to be 100 but got ${totalWeights} `
+    }
   }
   else if(hackathon.currency !== "non-cash" || hackathon.currency === ""){
     if(hackathon.currency === ""){
@@ -171,4 +185,8 @@ export const uriToBlob = (uri) => {
 
   });
 
+}
+
+export const generateId = () => {
+  return Math.random().toString(36).substring(2, 8) + Math.random().toString(36).substring(2, 8)
 }
