@@ -240,7 +240,7 @@ class HackathonPage extends Component {
       <View style={{ flex: 1, alignItems: 'stretch'}}>
         {isUserManager && hackathon.status == 'un-published' &&
           <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'}}>
-            <TouchableOpacity style={{alignSelf: 'center', margin: 15}}>
+            <TouchableOpacity style={{alignSelf: 'center', margin: 15}} onPress={() => this.props.navigation.navigate("Edit Hackathon", { hackathonId: hackathon.hackathonId})}>
               <Text style={styles.textBtn}><MaterialCommunityIcons size={18} name="square-edit-outline" />EDIT</Text>
             </TouchableOpacity>
             <TouchableOpacity style={{alignSelf: 'center', margin: 15}} onPress={() => this.setState({showPublishAlert: true})}>
