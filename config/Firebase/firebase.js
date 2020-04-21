@@ -100,6 +100,22 @@ const Firebase = {
       .doc(teamId)
   },
 
+  createNewHackathon : async (hackathonData, uid) => {
+    await firebase
+      .firestore()
+      .collection('hackathons')
+      .doc(hackathonData.hackathonId)
+      .set(hackathonData)
+
+    await firebase
+      .firestore()
+      .collection('users')
+      .doc(uid)
+      .update({
+        hackathons: firebase.firestore.FieldValue.arrayUnion({role: "manager", hackathonId: hackathonData.hackathonId})
+      })
+  },
+
   removeHackathon: async (hackathonId) => {
     const hackathonRef = firebase.firestore().collection('hackathons').doc(hackathonId)
     const hackathonDoc = await hackathonRef.get()
