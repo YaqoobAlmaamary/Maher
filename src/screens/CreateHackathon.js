@@ -9,7 +9,7 @@ import { StyleSheet } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import RadioForm from 'react-native-simple-radio-button'
-import { checkHackathon, mergeDateTime, uriToBlob } from '../../utils/helper'
+import { checkHackathon, mergeDateTime, uriToBlob, generateId } from '../../utils/helper'
 import { generatePushID } from '../../utils/generate-pushid'
 import moment from 'moment'
 
@@ -405,9 +405,6 @@ class CreateHackathon extends React.Component{
 
     // change the Criterion element in criteria array in the state, type in ["name","weight"]
     onChangeCriterion(criterion, newInput, type){
-      if(type === "weight" && parseFloat(newInput) >= 100)
-        return
-
       const newCriteria = this.state.criteria.map(c => {
         if(c.criteriaId == criterion.criteriaId){
           const update = c
@@ -424,7 +421,7 @@ class CreateHackathon extends React.Component{
     addCriteria(){
         // new criteria
         var criteria = {
-            criteriaId: this.state.criteria.length+1,
+            criteriaId: generateId(),
             name: "",
             weight: "",
         }
@@ -542,6 +539,7 @@ class CreateHackathon extends React.Component{
                     <H3 style={ styles.label }>Criteria</H3>
                     {this.state.criteria.map( (item, index) => (
                       <CriterionInput
+                        index={index}
                         key={index}
                         item={item}
                         onChangeCriterionName={(item, name) => {
@@ -847,10 +845,10 @@ function PrizeInput(props) {
 }
 
 function CriterionInput(props) {
-  const { item, onChangeCriterionName, onChangeCriterionWeight, removeCriteria } = props
+  const { item, onChangeCriterionName, onChangeCriterionWeight, removeCriteria, index } = props
   return (
     <View>
-        <H3 style={ styles.label }>{item.criteriaId}- Criterion Name</H3>
+        <H3 style={ styles.label }>{index+1}- Criterion Name</H3>
         <TextInputWithMsg
             label="Name"
             value={ item.name }
