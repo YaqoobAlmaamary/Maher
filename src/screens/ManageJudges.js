@@ -9,7 +9,8 @@ class ManageJudges extends Component {
   state = {
     hackathon: {},
     judgesData: [],
-    judgeToRemove: null
+    judgeToRemove: null,
+    isManagerToJudgesInRequest: false
   }
   getJudgesData = async (hackathon) => {
     if(hackathon.judges == null || hackathon.judges.length == 0)
@@ -46,6 +47,22 @@ class ManageJudges extends Component {
     })
 
   }
+  addManagerToJudges = async () => {
+    const { uid } = this.props.firebase.getCurrentUser()
+
+    if(this.state.hackathon.judges.includes(uid)){
+      console.log("You already in the judges list");
+      return
+    }
+
+    this.setState({
+      isManagerToJudgesInRequest: true
+    })
+    await this.props.firebase.addJudge(this.state.hackathon.hackathonId, uid)
+    this.setState({
+      isManagerToJudgesInRequest: false
+    })
+  }
   async componentDidMount(){
     const { hackathonId } = this.props.route.params
     this.hackathonListener = this.props.firebase.getHackathonDoc(hackathonId)
@@ -63,6 +80,7 @@ class ManageJudges extends Component {
   }
   render() {
     const { judgesData, hackathon } = this.state
+    const { uid } = this.props.firebase.getCurrentUser()
     return (
       <View style={{flex: 1}}>
         <Text style={[styles.header ,{margin: 20}]}>Judges</Text>
@@ -94,10 +112,21 @@ class ManageJudges extends Component {
               </View>
             ))
           : <ActivityIndicator style={{margin: 25}} size="small" color='#BB86FC' />}
-          {(hackathon.judges == null || hackathon.judges.length == 0 ) &&
+          {(hackathon.judges != null && hackathon.judges.length == 0 ) &&
             <Text style={[styles.smallMute, {textAlign: 'center'}]}>No judges</Text>
           }
         </ScrollView>
+        {this.state.isManagerToJudgesInRequest &&
+            <ActivityIndicator style={{marginTop: 10}} size="small" color='#BB86FC' />}
+        {(hackathon.judges != null && !hackathon.judges.includes(uid)
+          && !this.state.isManagerToJudgesInRequest) &&
+            <TouchableOpacity onPress={this.addManagerToJudges}
+              style={{alignSelf: 'center', marginTop: 10}}>
+              <Text style={[styles.btn, { color: '#01A299'}]}>
+                  Add Me To The Judges
+              </Text>
+            </TouchableOpacity>
+        }
         <TouchableOpacity onPress={() => this.props.navigation.navigate("Invite Judge", {hackathonId: hackathon.hackathonId, hackathonName: hackathon.name})}
           style={{alignSelf: 'center', margin: 25}}>
           <Text style={styles.btn}>

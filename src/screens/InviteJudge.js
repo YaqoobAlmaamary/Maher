@@ -33,7 +33,7 @@ class InviteJudge extends Component {
 
     const allUsersWithoutJudges = allUsers.map(user => {
       if(user.hackathons != null) {
-        if(!user.hackathons.find((h) => h.role=="judge" && h.hackathonId == hackathonId)){
+        if(!user.hackathons.find((h) => (h.role=="judge" || h.role=="manager") && h.hackathonId == hackathonId)){
           return user
         }
 
