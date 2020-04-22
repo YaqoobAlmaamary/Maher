@@ -84,8 +84,8 @@ class Notifications extends Component {
       await this.discard(notification)
     }
     else {
-      this.toast.current.show("You've been added successfully", 1500)
       await this.props.firebase.addJudge(hackathon.hackathonId, uid)
+      this.toast.current.show("You've been added successfully", 1500)
       await this.discard(notification)
     }
   }
