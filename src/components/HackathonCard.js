@@ -6,11 +6,11 @@ import {getDuration} from '../../utils/helper'
 
 function HackathonCard({hackathon, goToHackathon}) {
   let prizes
-  if(hackathon.totalPrizes == 'non-cash'){
+  if(hackathon.totalPrizes == 'non-cash' || isNaN(parseInt(hackathon.totalPrizes))){
     prizes = "Non-cash prizes"
   }
   else {
-    const amount = hackathon.totalPrizes.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") // put commas
+    const amount = parseInt(hackathon.totalPrizes).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") // put commas
     prizes = amount+hackathon.currency+" in prizes"
   }
   return (
