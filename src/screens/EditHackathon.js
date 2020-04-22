@@ -6,6 +6,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { Form, H3, Button } from 'native-base';
 import { TextInputWithMsg, TextArea } from '../components/Inputs';
 import { StyleSheet } from 'react-native'
+import MyMap from '../components/MyMap';
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import RadioForm from 'react-native-simple-radio-button'
@@ -33,6 +34,7 @@ class EditHackathon extends React.Component{
             tagline: "",
             description: "",
             city: "",
+            locationAddress: {},
             criteria: [],
             maxInTeam: 0,
             maxTeams: 0,
@@ -58,6 +60,7 @@ class EditHackathon extends React.Component{
             showDateTimePicker_reviewStartTime: false,
             showDateTimePicker_reviewEndDate: false,
             showDateTimePicker_reviewEndTime: false,
+            isMapVisible: false,
             isSubmiting: false
         }
     }
@@ -76,6 +79,7 @@ class EditHackathon extends React.Component{
         tagline: this.state.tagline,
         description: this.state.description,
         city: this.state.city,
+        locationAddress: this.state.locationAddress,
         criteria: this.state.criteria,
         maxTeams: parseInt(this.state.maxTeams),
         maxInTeam: parseInt(this.state.maxInTeam),
@@ -429,6 +433,33 @@ class EditHackathon extends React.Component{
 
         this.setState( () => ({ logo: pickerResult }) )
     }
+
+    getInitialLocation() {
+      if(this.state.locationAddress.latitude == null || this.state.locationAddress.longitude == null){
+        return {
+          region: {
+            latitude: 24.723,
+            longitude: 46.62,
+            latitudeDelta: 1,
+            longitudeDelta: 1,
+          },
+        };
+
+      }
+
+      else {
+        return {
+          region: {
+            latitude: this.state.locationAddress.latitude,
+            longitude: this.state.locationAddress.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          },
+        };
+      }
+
+    }
+
     async componentDidMount(){
       const { hackathonId } = this.props.route.params
       const hackathonDoc = await this.props.firebase.getHackathonDoc(hackathonId).get()
@@ -441,6 +472,7 @@ class EditHackathon extends React.Component{
         tagline: hackathon.tagline,
         description: hackathon.description,
         city: hackathon.city,
+        locationAddress: hackathon.locationAddress,
         criteria: hackathon.criteria,
         maxInTeam: hackathon.maxInTeam,
         maxTeams: hackathon.maxTeams,
@@ -462,6 +494,38 @@ class EditHackathon extends React.Component{
     }
 
     render() {
+        this.props.navigation.setOptions({
+          headerShown: true,
+          headerTitle: "Create Hackathon",
+          headerTitleAlign: 'center',
+        })
+
+        const initialRegion = this.getInitialLocation().region
+
+        if(this.state.isMapVisible){
+          this.props.navigation.setOptions({
+            headerShown: false
+          })
+          return (
+            <MyMap
+              isMapVisible={this.state.isMapVisible}
+              initialRegion={initialRegion}
+              coordinate={{latitude: initialRegion.latitude, longitude: initialRegion.longitude }}
+              onConfirm={(coordinate) => {
+                this.setState({
+                  locationAddress: coordinate,
+                  isMapVisible: false
+                })
+              }}
+              onClose={() => {
+                this.setState({
+                  isMapVisible: false
+                })
+              }}
+            />
+          )
+        }
+
         if(this.state.hackathonId === null){
           return (
             <View style={{alignItems: 'center'}}>
@@ -527,7 +591,7 @@ class EditHackathon extends React.Component{
                     />
 
                     <H3 style={ styles.label } >City</H3>
-                    <Text style={ styles.helperTxt }>Which city does the hackathon located in?</Text>
+                    <Text style={ styles.helperTxt }>Which city does the hackathon located in? this will be used to display the link for exact location</Text>
                     <TextInputWithMsg
                         maxLength={30}
                         placeholder={"Riyadh, Jeddah ...etc"}
@@ -538,6 +602,23 @@ class EditHackathon extends React.Component{
                             })
                           }}
                     />
+
+                    {this.state.locationAddress.latitude != null ?
+                      <View style={{marginTop: 15}}>
+                        <Text style={styles.centerBoldHeader}>Location has been set</Text>
+                        <TouchableOpacity style={ styles.btn } onPress={() => this.setState({isMapVisible: true})}>
+                            <Text style={ styles.change }>Change Hackathon Location</Text>
+                        </TouchableOpacity>
+                      </View>
+                    : <View style={{marginTop: 15}}>
+                        <H3 style={ styles.label } >Select the exact hackathon location</H3>
+                        <Text style={[styles.centerBoldHeader, {color: '#CF6679'}]}>Location Not Selected</Text>
+                        <TouchableOpacity style={ styles.btn } onPress={() => this.setState({isMapVisible: true})}>
+                            <Text style={ styles.add }>Select Hackathon Location</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                    }
 
                     {/**button to add logo ======================================================*/}
                     <View style={ { justifyContent: "center", alignItems: "center", marginTop: 30 } }>
@@ -915,6 +996,7 @@ const styles = StyleSheet.create({
     centerBoldHeader: {
       fontFamily: 'Roboto_medium',
       textAlign: 'center',
+      color: 'rgba(255, 255, 255, 0.87)'
     },
     btn: {
       alignSelf: 'center',
