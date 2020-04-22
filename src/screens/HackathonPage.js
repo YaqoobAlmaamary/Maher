@@ -1,5 +1,5 @@
 import React, { Component, useState } from 'react'
-import { View, TouchableOpacity, ActivityIndicator,ScrollView, Image, StyleSheet, Alert } from 'react-native'
+import { View, TouchableOpacity, ActivityIndicator,ScrollView, Image, StyleSheet, Alert, Linking } from 'react-native'
 import { Text, Button } from 'native-base'
 import { Entypo, MaterialCommunityIcons } from '@expo/vector-icons'
 import {withFirebaseHOC} from '../../config/Firebase'
@@ -176,6 +176,15 @@ class HackathonPage extends Component {
 
     return await Promise.all(getJudgesDataPromises)
   }
+
+  loadInBrowser = (latitude, longitude) => {
+    if(latitude == null || longitude == null)
+      return
+
+    const url = `https://maps.google.com/?q=${latitude},${longitude}`
+    Linking.openURL(url).catch(err => console.error("Couldn't load page", err))
+  }
+
   async componentDidMount(){
     this.props.navigation.dangerouslyGetParent().setOptions({
       tabBarVisible: false
@@ -277,7 +286,13 @@ class HackathonPage extends Component {
               <Text style={styles.h3}>Review End</Text>
               <Text style={styles.point}>{moment(hackathon.reviewEndDateTime.seconds*1000).format("LLL")}</Text>
             </View>
-            <Text style={styles.locationLink}><Entypo size={16} name="location-pin" />{hackathon.city}</Text>
+            {(hackathon.locationAddress != null && hackathon.locationAddress.latitude != null) ?
+                <TouchableOpacity onPress={() => this.loadInBrowser(hackathon.locationAddress.latitude, hackathon.locationAddress.longitude)}>
+                  <Text style={styles.locationLink}><Entypo size={16} name="location-pin" />{hackathon.city}</Text>
+                </TouchableOpacity>
+              : <Text style={styles.smallDescription}><Entypo size={16} name="location-pin" />{hackathon.city}</Text>
+            }
+
             <Text style={styles.title}>{hackathon.name}</Text>
             <Text style={styles.description}>{hackathon.description}</Text>
             {(hackathon.prizes != null && Object.values(hackathon.prizes).length != 0) &&
@@ -630,7 +645,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   locationLink: {
-    margin: 10,
+    marginLeft: 15,
     marginBottom: 5,
     color: '#BB86FC',
     opacity: 0.8
