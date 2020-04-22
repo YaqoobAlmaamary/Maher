@@ -133,9 +133,9 @@ class CreateHackathon extends React.Component{
         hackathon["thumbnail"] = thumbnail
         const { uid } = this.props.firebase.getCurrentUser()
 
-        // await this.props.firebase.createNewHackathon(hackathon, uid)
-        //
-        // this.props.navigation.goBack()
+        await this.props.firebase.createNewHackathon(hackathon, uid)
+
+        this.props.navigation.goBack()
 
 
       }
