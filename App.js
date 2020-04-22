@@ -83,8 +83,8 @@ class TabNavigator extends Component {
                   return <FontAwesome name='home' size={35} color={color} />
 
                 } else if (route.name === 'Notifications') {
-
-                  return <BillWithBadge size={35} color={color} badgeCount={route.params.notifications.length} />
+                  const badge = route.params.notifications.length === 0 ? notifications.length : route.params.notifications.length
+                  return <BillWithBadge size={35} color={color} badgeCount={badge} />
                 } else if (route.name === 'Search') {
 
                   return <MaterialIcons name='search' size={35} color={color} />
