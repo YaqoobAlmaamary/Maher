@@ -85,6 +85,10 @@ export const checkHackathon = (hackathon) => {
     isError = true
     text = "City can't be blank"
   }
+  else if(hackathon.locationAddress.latitude == null){
+    isError = true
+    text = "You must select the exact location of the hackathon"
+  }
   else if(isNaN(hackathon.maxTeams) || hackathon.maxTeams === 0){
     isError = true
     text = hackathon.maxTeams === 0 ? "Max teams can't be zero or blank" : "Max teams should only contains numbers"
@@ -109,6 +113,32 @@ export const checkHackathon = (hackathon) => {
     isError = true
     text = "Please add at least one criterion"
   }
+  else if(hackathon.currency === ""){
+    isError = true
+    text = `Please select currency`
+  }
+  else if(hackathon.currency !== "non-cash"){
+    if(isNaN(hackathon.totalPrizes) || hackathon.totalPrizes.trim() === ""){
+      isError = true
+      text = `Currency selected is ${hackathon.currency} and Estimated Total Prizes is blank or contains chars ( it should only be a number)`
+    }
+  }
+  else if(hackathon.prizes.length !== 0){
+    hackathon.prizes.map( p => {
+      if(p.type === 'cash' && isNaN(p.value)){
+        isError = true
+        text = `Value of prize number ${p.position} has the type of (cash) the value should only be a number`
+      }
+      else if(p.value == 0 && p.type === 'cash'){
+        isError = true
+        text = `Value of prize number ${p.position} has the type of (cash) the value can't be blank or zero`
+      }
+      else if(p.value.trim() === ""){
+        isError = true
+        text = `Value of prize number ${p.position} can't be blank`
+      }
+    })
+  }
   else if(hackathon.criteria.length !== 0){
     let totalWeights = 0
     hackathon.criteria.map((c, i) => {
@@ -130,32 +160,6 @@ export const checkHackathon = (hackathon) => {
       isError = true
       text = `The total criteria weights expect to be 100 but got ${totalWeights} `
     }
-  }
-  else if(hackathon.currency !== "non-cash" || hackathon.currency === ""){
-    if(hackathon.currency === ""){
-      isError = true
-      text = `Please select currency`
-    }
-    else if(isNaN(hackathon.totalPrizes) || hackathon.totalPrizes.trim() === ""){
-      isError = true
-      text = `Currency selected is ${hackathon.currency} and Estimated Total Prizes is blank or contains chars ( it should only be a number)`
-    }
-  }
-  else if(hackathon.prizes.length !== 0){
-    hackathon.prizes.map( p => {
-      if(p.type === 'cash' && isNaN(p.value)){
-        isError = true
-        text = `Value of prize number ${p.position} has the type of (cash) the value should only be a number`
-      }
-      else if(p.value == 0 && p.type === 'cash'){
-        isError = true
-        text = `Value of prize number ${p.position} has the type of (cash) the value can't be blank or zero`
-      }
-      else if(p.value.trim() === ""){
-        isError = true
-        text = `Value of prize number ${p.position} can't be blank`
-      }
-    })
   }
 
   return {isError, text}
