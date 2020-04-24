@@ -303,8 +303,8 @@ class HackathonPage extends Component {
                   {prize.type == 'cash' ?
                     <Text style={styles.h3}>{prize.position}. {prize.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+" "+hackathon.currency}</Text>
                   : <Text style={styles.h3}>{prize.position}. {prize.value}</Text>}
-                  {prize.description !== '' &&
-                    <Text style={styles.smallDescription}>{prize.description}</Text>}
+                  {prize.desc !== '' &&
+                    <Text style={styles.smallDescription}>{prize.desc}</Text>}
                 </View>
               ))
             }
