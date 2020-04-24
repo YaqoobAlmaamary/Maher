@@ -72,10 +72,9 @@ class CreateTeam extends Component {
             <TextInputWithMsg
               label="What's your idea?"
               value={mainIdea}
-              onChangeText={(mainIdea) => { 
-                console.log( mainIdea )
-                if( mainIdea.length <= 30 )
-                  this.setState({mainIdea}) 
+              maxLength={30}
+              onChangeText={(mainIdea) => {
+                  this.setState({mainIdea})
               }}/>
             <H3 style={styles.label}>Description of the idea</H3>
             <TextArea
@@ -87,8 +86,8 @@ class CreateTeam extends Component {
             <TextInputWithMsg
               placeholder="I need to..."
               value={needTo}
-              onChangeText={(needTo) =>{ 
-                if( needTo.lenght <= 50 )
+              maxLength={50}
+              onChangeText={(needTo) =>{
                   this.setState({needTo})
               }}/>
             {submiting ?
