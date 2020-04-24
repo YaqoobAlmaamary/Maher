@@ -85,10 +85,6 @@ export const checkHackathon = (hackathon) => {
     isError = true
     text = "City can't be blank"
   }
-  else if(hackathon.locationAddress.latitude == null){
-    isError = true
-    text = "You must select the exact location of the hackathon"
-  }
   else if(isNaN(hackathon.maxTeams) || hackathon.maxTeams === 0){
     isError = true
     text = hackathon.maxTeams === 0 ? "Max teams can't be zero or blank" : "Max teams should only contains numbers"

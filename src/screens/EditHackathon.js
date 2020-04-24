@@ -612,6 +612,7 @@ class EditHackathon extends React.Component{
                       </View>
                     : <View style={{marginTop: 15}}>
                         <H3 style={ styles.label } >Select the exact hackathon location</H3>
+                        <Text style={ styles.helperTxt }>Optional</Text>
                         <Text style={[styles.centerBoldHeader, {color: '#CF6679'}]}>Location Not Selected</Text>
                         <TouchableOpacity style={ styles.btn } onPress={() => this.setState({isMapVisible: true})}>
                             <Text style={ styles.add }>Select Hackathon Location</Text>
